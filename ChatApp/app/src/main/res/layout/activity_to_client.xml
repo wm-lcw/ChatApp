@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.ToClientActivity"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@mipmap/ic_client_main">
+
+    <LinearLayout
+        android:id="@+id/ll_request_ui"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="150dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+        <EditText
+            android:background="@drawable/et_ip_styles"
+            android:id="@+id/et_ip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="input service Ip"/>
+
+        <EditText
+            android:id="@+id/et_port"
+            android:layout_width="95dp"
+            android:layout_height="wrap_content"
+            android:hint="input port" />
+
+        <Button
+            android:id="@+id/bt_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="connect"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_chat_ui"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_marginTop="30dp"
+            android:id="@+id/tv_chat_record"
+            android:textSize="16sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <RelativeLayout
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/et_input_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_toLeftOf="@+id/bt_send_message" />
+
+            <Button
+                android:id="@+id/bt_send_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:text="send" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+
+</LinearLayout>

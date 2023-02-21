@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:version-code="102"
+    android:versionName="1.0.2">
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".base.BasicApplication"
@@ -12,6 +16,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="30">
+        <activity
+            android:name=".activity.ClientChatActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".activity.ToServiceActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ToClientActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden|adjustResize" />
         <activity
             android:name=".activity.MainActivity"
             android:exported="true">

@@ -9,17 +9,19 @@
     android:gravity="center">
 
     <ImageView
-        android:id="@+id/bt_service"
+        android:layout_marginLeft="50dp"
+        android:id="@+id/iv_client"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/ic_client"/>
+
+    <ImageView
+        android:id="@+id/iv_service"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@mipmap/ic_service"/>
 
-    <ImageView
-        android:layout_marginLeft="50dp"
-        android:id="@+id/bt_client"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/ic_client"/>
+
 
 
 </LinearLayout>

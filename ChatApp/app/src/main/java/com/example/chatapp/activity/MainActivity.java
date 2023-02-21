@@ -2,7 +2,10 @@ package com.example.chatapp.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.example.chatapp.R;
 import com.example.chatapp.base.BasicActivity;
@@ -19,10 +22,28 @@ import com.example.chatapp.base.BasicActivity;
  */
 public class MainActivity extends BasicActivity {
 
+    private ImageView ivClient, ivService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ivClient = findViewById(R.id.iv_client);
+        ivService = findViewById(R.id.iv_service);
+        ivClient.setOnClickListener(mListen);
+        ivService.setOnClickListener(mListen);
+
     }
+
+    View.OnClickListener mListen = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v == ivClient){
+                startActivity(new Intent(MainActivity.this,ToClientActivity.class));
+            } else if (v == ivService){
+                startActivity(new Intent(MainActivity.this,ToServiceActivity.class));
+            }
+        }
+    };
 
     @Override
     public int getLayoutId() {

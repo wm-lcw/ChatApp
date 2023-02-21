@@ -37,6 +37,17 @@ public class ChatAppLog {
         }
     }
 
+    public static void debug() {
+        if (LOCAL_DBG_SWITCH) {
+            StackTraceElement[] stacks = new Throwable().getStackTrace();
+            StackTraceElement currentStack = stacks[1];
+
+            String strMsg = currentStack.getFileName() + "(" + currentStack.getLineNumber() + ")::"
+                    + currentStack.getMethodName();
+            android.util.Log.d(TAG, strMsg);
+        }
+    }
+
     public static void error(String log) {
         if (LOCAL_DBG_SWITCH) {
             StackTraceElement[] stacks = new Throwable().getStackTrace();
