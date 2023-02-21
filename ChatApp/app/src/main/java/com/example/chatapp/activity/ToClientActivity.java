@@ -116,7 +116,8 @@ public class ToClientActivity extends BasicActivity {
 //            ip = etIpDress.getText().toString();
 //            port = etPort.getText().toString();
                 //暂时将服务器和端口写死
-                ip = "192.88.1.32";
+//                ip = "192.88.1.32";
+                ip = "192.168.18.65";
                 ChatAppLog.debug("ip:" + ip + ";  port:" + port);
                 toConnectService();
             } else if (view == btSendMessage) {
@@ -179,7 +180,6 @@ public class ToClientActivity extends BasicActivity {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
                 if (!"".equals(getInputMessage)) {
-
                     threadPool.execute(() -> {
                         mClientOut.println(getInputMessage);
                         mClientOut.flush();
@@ -187,6 +187,7 @@ public class ToClientActivity extends BasicActivity {
                     ChatAppLog.debug();
                     String temp = tvChatRecord.getText().toString() + "\n" + getInputMessage;
                     tvChatRecord.setText(temp);
+                    etInputMessage.setText("");
                 }
 
             }

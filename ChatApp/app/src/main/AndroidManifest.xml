@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:version-code="102"
-    android:versionName="1.0.2">
+    android:versionCode="103"
+    android:versionName="1.0.3">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -26,6 +26,10 @@
         <activity
             android:name=".activity.ToServiceActivity"
             android:exported="false" />
+        <!--
+            Activity 使用windowSoftInputMode属性是为了弹出键盘时不将布局顶出，
+            而是保持在屏幕显示范围内，但是这样做会导致布局内容压缩
+        -->
         <activity
             android:name=".activity.ToClientActivity"
             android:exported="false"
