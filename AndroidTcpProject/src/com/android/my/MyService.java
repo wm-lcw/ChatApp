@@ -1,7 +1,5 @@
 package com.android.my;
 
-import javafx.stage.Screen;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,9 +14,11 @@ public class MyService {
     private static Scanner scanner;
     private static boolean clientConnect = true;
     private static Socket client;
+    private static PrintWriter clientOut;
+    private static BufferedReader clientIn;
 
     /**
-     * �����̳߳�
+     * 创建线程池
      */
     private static ExecutorService threadPool = new ThreadPoolExecutor(2,
             5,
@@ -37,34 +37,48 @@ public class MyService {
     }
 
     /**
-    * ��������
-    * */
+     * 开启服务
+     */
     public static void startService() {
         threadPool.execute(() -> {
             try {
-                System.out.println("Server: Connecting...");
+                System.out.println("Server: start");
                 ServerSocket serverSocket = new ServerSocket(SERVERPORT);
+                //循环监听客户的连接
                 while (true) {
+                    System.out.println("Server: waiting...");
+                    //这里会阻塞，直到有客户的连接
                     client = serverSocket.accept();
                     System.out.println("Server: Receiving...");
                     try {
-                        toControlStop();
+                        //开启输入线程，用于控制发送消息到客户端、控制关闭客户
+                        sendMessageAndControlStop();
                         while (true) {
-                            if (!clientConnect) {
-                                System.out.println("close");
+                            if (client.isClosed()) {
+                                //若客户连接已关闭，就退出循环，不再接收当前客户的消息
+                                System.out.println("client is close");
                                 break;
                             }
-                            BufferedReader in = new BufferedReader(
+                            clientIn = new BufferedReader(
                                     new InputStreamReader(client.getInputStream()));
-                            String str = in.readLine();
+                            String str = clientIn.readLine();
+                            if (str == null || "".equals(str) || "null".equals(str)) {
+                                //读取到的消息为空，证明该客户已断开连接
+                                clientIn.close();
+                                clientOut.close();
+                                client.close();
+                                break;
+                            }
                             System.out.println("Server: Received: '" + str + "'");
                         }
                     } catch (Exception e) {
-                        System.out.println("Server: Error");
+                        System.out.println("Client: Error");
                         e.printStackTrace();
                     } finally {
+                        clientIn.close();
+                        clientOut.close();
                         client.close();
-                        System.out.println("Server: Done.");
+                        System.out.println("Client: disconnect.");
                     }
                 }
             } catch (Exception e) {
@@ -75,26 +89,33 @@ public class MyService {
     }
 
     /**
-     * ����ֹͣ�ͻ��˷��͵���Ϣ
+     * 控制停止客户端发送的消息
      */
-    public static void toControlStop() {
+    public static void sendMessageAndControlStop() {
         threadPool.execute(() -> {
             try {
-                PrintWriter mClientOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-
+                clientOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
                 while (true) {
+                    //若客户端已关闭，则退出循环，关闭控制台输入监听
+                    if (client.isClosed()) {
+                        System.out.println("sendMessageAndControlStop - client is close");
+                        break;
+                    }
                     String str = scanner.nextLine();
                     if ("stop".equals(str)) {
                         System.out.println("input stop");
-                        clientConnect = false;
+                        clientIn.close();
+                        clientOut.close();
+                        client.close();
                         break;
                     } else {
-                        mClientOut.println(str);
-                        mClientOut.flush();
+                        clientOut.println(str);
+                        System.out.println("Server : Send : " + str);
+                        clientOut.flush();
                     }
                 }
             } catch (IOException e) {
-
+                e.printStackTrace();
             }
         });
     }

@@ -125,7 +125,7 @@ public class ToClientActivity extends BasicActivity {
                     TCP_IP = inPutIp;
                     TCP_PORT = Integer.parseInt(inPutPort);
                     //暂时将服务器和端口写死
-                    TCP_IP = "192.168.184.65";
+                    TCP_IP = "192.168.141.65";
                     TCP_PORT = 3333;
                     ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + TCP_PORT);
                     toConnectService();
@@ -180,6 +180,7 @@ public class ToClientActivity extends BasicActivity {
      */
     private void startReceiverMessage() {
         threadPool.execute(() -> {
+            ChatAppLog.debug();
             try {
                 while (true) {
                     String str = mClientIn.readLine();
@@ -249,15 +250,29 @@ public class ToClientActivity extends BasicActivity {
         super.onPause();
         ChatAppLog.debug();
         if (mSocket != null) {
-            try {
-                mSocket.close();
-                ChatAppLog.debug("close Socket");
-                mClientOut = null;
-                mClientIn = null;
-                isConnect = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            closeConnection();
+            ChatAppLog.debug("close Socket");
+            isConnect = false;
         }
+    }
+
+    public void closeConnection() {
+        try {
+            if (mClientOut != null) {
+                mClientOut.close(); //关闭输出流
+                mClientOut = null;
+            }
+            if (mClientIn != null) {
+                mClientIn.close(); //关闭输入流
+                mClientIn = null;
+            }
+            if (mSocket != null) {
+                mSocket.close();  //关闭socket
+                mSocket = null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }
