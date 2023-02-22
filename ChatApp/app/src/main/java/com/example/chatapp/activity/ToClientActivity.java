@@ -1,6 +1,5 @@
 package com.example.chatapp.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -8,7 +7,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -21,6 +19,7 @@ import com.example.chatapp.utils.ChatAppLog;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -49,11 +48,16 @@ public class ToClientActivity extends BasicActivity {
     private LinearLayout llRequestUi;
     private RelativeLayout rlChatUi;
     private TextView tvChatRecord;
-    private String ip, port;
+    private String inPutIp, inPutPort;
+    private String TCP_IP;
+    private int TCP_PORT;
+
+    private boolean isConnect = false;
+
     /**
      * 创建线程池
-     * */
-    ExecutorService threadPool = new ThreadPoolExecutor(1,
+     */
+    ExecutorService threadPool = new ThreadPoolExecutor(3,
             5,
             2L,
             TimeUnit.SECONDS,
@@ -86,13 +90,13 @@ public class ToClientActivity extends BasicActivity {
     }
 
     /**
-     *  @version V1.0
-     *  @Title initData
-     *  @author wm
-     *  @createTime 2023/2/21 20:32
-     *  @description 初始化布局、数据
-     *  @param
-     *  @return
+     * @param
+     * @return
+     * @version V1.0
+     * @Title initData
+     * @author wm
+     * @createTime 2023/2/21 20:32
+     * @description 初始化布局、数据
      */
     private void initData() {
         mContext = this;
@@ -113,13 +117,19 @@ public class ToClientActivity extends BasicActivity {
         @Override
         public void onClick(View view) {
             if (view == btConnect) {
-//            ip = etIpDress.getText().toString();
-//            port = etPort.getText().toString();
-                //暂时将服务器和端口写死
-//                ip = "192.88.1.32";
-                ip = "192.168.18.65";
-                ChatAppLog.debug("ip:" + ip + ";  port:" + port);
-                toConnectService();
+                inPutIp = etIpDress.getText().toString();
+                inPutPort = etPort.getText().toString();
+                if (inPutIp == null || "".equals(inPutIp) || "".equals(inPutPort)) {
+                    showToash("please check IP or PORT format !!!");
+                } else {
+                    TCP_IP = inPutIp;
+                    TCP_PORT = Integer.parseInt(inPutPort);
+                    //暂时将服务器和端口写死
+                    TCP_IP = "192.168.184.65";
+                    TCP_PORT = 3333;
+                    ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + TCP_PORT);
+                    toConnectService();
+                }
             } else if (view == btSendMessage) {
                 ChatAppLog.debug();
                 mHandler.sendEmptyMessage(MSG_SEND);
@@ -130,22 +140,23 @@ public class ToClientActivity extends BasicActivity {
     };
 
     /**
-     *  @version V1.0
-     *  @Title toConnectService
-     *  @author wm
-     *  @createTime 2023/2/21 20:32
-     *  @description 连接服务器
-     *  @param
-     *  @return
+     * @param
+     * @return
+     * @version V1.0
+     * @Title toConnectService
+     * @author wm
+     * @createTime 2023/2/21 20:32
+     * @description 连接服务器
      */
     private void toConnectService() {
         threadPool.execute(() -> {
             try {
                 //指定ip地址和端口号
-                mSocket = new Socket(ip, 3333);
+                mSocket = new Socket(TCP_IP, TCP_PORT);
                 //获取输出流、输入流
                 mClientIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
                 mClientOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(mSocket.getOutputStream())), true);
+                startReceiverMessage();
                 mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -159,23 +170,57 @@ public class ToClientActivity extends BasicActivity {
     }
 
     /**
-     *  @version V1.0
-     *  @Title
-     *  @author wm
-     *  @createTime 2023/2/21 20:33
-     *  @description 创建Handler，更新UI、发送信息等事务
-     *  @param
-     *  @return
+     * @param
+     * @return
+     * @version V1.0
+     * @Title startReceiverMessage
+     * @author wm
+     * @createTime 2023/2/22 21:24
+     * @description 接收服务端的信息
+     */
+    private void startReceiverMessage() {
+        threadPool.execute(() -> {
+            try {
+                while (true) {
+                    String str = mClientIn.readLine();
+                    ChatAppLog.debug("receiver " + str);
+                    if (str != null && !"".equals(str)) {
+                        Message message = new Message();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("receiverMessage", str);
+                        message.what = MSG_RECEIVE;
+                        message.setData(bundle);
+                        mHandler.sendMessage(message);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                ChatAppLog.error(e.toString());
+            }
+        });
+    }
+
+    /**
+     * @version V1.0
+     * @Title
+     * @author wm
+     * @createTime 2023/2/21 20:33
+     * @description 创建Handler，更新UI、发送信息等事务
+     * @param
+     * @return
      */
     final Handler mHandler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
+                showToash("connect fail! check your IP and PORT!");
             } else if (msg.what == MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
+                isConnect = true;
                 llRequestUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
+
             } else if (msg.what == MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
@@ -185,12 +230,34 @@ public class ToClientActivity extends BasicActivity {
                         mClientOut.flush();
                     });
                     ChatAppLog.debug();
-                    String temp = tvChatRecord.getText().toString() + "\n" + getInputMessage;
+                    String temp = tvChatRecord.getText().toString() + "\n\t\t\t\t\t\t\t\t" + getInputMessage;
                     tvChatRecord.setText(temp);
                     etInputMessage.setText("");
                 }
 
+            } else if (msg.what == MSG_RECEIVE) {
+                String receiverMessage = msg.getData().getString("receiverMessage").trim();
+                ChatAppLog.debug(receiverMessage);
+                String temp = tvChatRecord.getText().toString() + "\n\t" + receiverMessage;
+                tvChatRecord.setText(temp);
             }
         }
     };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ChatAppLog.debug();
+        if (mSocket != null) {
+            try {
+                mSocket.close();
+                ChatAppLog.debug("close Socket");
+                mClientOut = null;
+                mClientIn = null;
+                isConnect = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

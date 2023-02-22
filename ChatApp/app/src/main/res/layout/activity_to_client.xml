@@ -23,12 +23,14 @@
             android:id="@+id/et_ip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:inputType="number|numberDecimal"
             android:hint="input service Ip"/>
 
         <EditText
             android:id="@+id/et_port"
             android:layout_width="95dp"
             android:layout_height="wrap_content"
+            android:inputType="number"
             android:hint="input port" />
 
         <Button
@@ -46,9 +48,11 @@
         android:visibility="gone">
 
         <TextView
+            android:layout_marginLeft="15dp"
             android:layout_marginTop="30dp"
             android:id="@+id/tv_chat_record"
             android:textSize="16sp"
+            android:text="textMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 

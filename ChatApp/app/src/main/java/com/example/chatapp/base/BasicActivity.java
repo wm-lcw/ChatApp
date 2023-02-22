@@ -96,7 +96,7 @@ public abstract class BasicActivity extends AppCompatActivity implements UiCallB
     /**
      * 消息提示
      */
-    protected void show(CharSequence charSequence) {
+    protected void showToash(CharSequence charSequence) {
         Toast.makeText(context, charSequence, Toast.LENGTH_SHORT).show();
     }
 }
