@@ -23,7 +23,8 @@
             android:id="@+id/et_ip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="number|numberDecimal"
+            android:inputType="number"
+            android:digits="0123456789."
             android:hint="input service Ip"/>
 
         <EditText
