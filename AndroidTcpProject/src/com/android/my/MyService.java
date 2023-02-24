@@ -18,8 +18,10 @@ public class MyService {
     private static BufferedReader clientIn;
 
     public static ConcurrentHashMap<String, Thread> consoleThreadMap = new ConcurrentHashMap<String, Thread>();
-    private static Thread outToClientThread;
     private static ThreadPoolExecutor tpe;
+    private static Thread receiverThread,sendThread;
+
+    public static String receiverMessage,sendMessage;
 
     /**
      * 创建线程池
@@ -49,42 +51,52 @@ public class MyService {
                 ServerSocket serverSocket = new ServerSocket(SERVERPORT);
                 //循环监听客户的连接
                 while (true) {
-                    System.out.println("startService--activityThread size :"+tpe.getActiveCount());
-                    System.out.println("Server: waiting...");
+                    System.out.println("startService--activityThread size :" + tpe.getActiveCount());
                     //这里会阻塞，直到有客户的连接
                     client = serverSocket.accept();
                     System.out.println(client);
                     System.out.println("Server: Receiving...");
-                    try {
-                        //开启输入线程，用于控制发送消息到客户端、控制关闭客户
-                        sendMessageAndControlStop();
-                        System.out.println("connectClient--activityThread size :"+tpe.getActiveCount());
-                        while (true) {
-                            if (client.isClosed()) {
-                                //若客户连接已关闭，就退出循环，不再接收当前客户的消息
-                                System.out.println("client is close");
-                                break;
-                            }
-                            clientIn = new BufferedReader(
-                                    new InputStreamReader(client.getInputStream()));
-                            String str = clientIn.readLine();
-                            if (str == null || "".equals(str) || "null".equals(str)) {
-                                //读取到的消息为空，证明该客户已断开连接
-                                closeClient();
-                                break;
-                            }
-                            System.out.println("Server: Received: '" + str + "'");
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Client: Error");
-                        e.printStackTrace();
-                    } finally {
-                        closeClient();
-                        System.out.println("Client: disconnect.");
-                    }
+                    //开启输入线程，用于控制发送消息到客户端、控制关闭客户
+                    sendMessageAndControlStop();
+                    //开启接收信息线程，用于接收客户端的消息
+                    receiverMessageFromClient();
+                    System.out.println("endService--activityThread size :" + tpe.getActiveCount());
                 }
             } catch (Exception e) {
                 System.out.println("Server: Error");
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     *
+    * */
+    public static void receiverMessageFromClient() {
+        threadPool.execute(() -> {
+            try {
+                receiverThread = Thread.currentThread();
+                clientIn = new BufferedReader(
+                        new InputStreamReader(client.getInputStream()));
+                System.out.println("connectClient--activityThread size :" + tpe.getActiveCount());
+                while (true) {
+                    if (client.isClosed()) {
+                        //若客户连接已关闭，就退出循环，不再接收当前客户的消息
+                        System.out.println("receiverMessageFromClient - client is close");
+                        closeClient();
+                        break;
+                    }
+                    //当服务端主动关闭客户连接时，这里会阻塞线程
+                    receiverMessage = clientIn.readLine();
+                    if (receiverMessage == null || "".equals(receiverMessage) || "null".equals(receiverMessage)) {
+                        //读取到的消息为空，证明该客户已断开连接
+                        closeClient();
+                        break;
+                    }
+                    System.out.println("Server: Received: '" + receiverMessage + "'");
+                }
+            } catch (Exception e) {
+                System.out.println("Client: Error");
                 e.printStackTrace();
             }
         });
@@ -96,23 +108,25 @@ public class MyService {
     public static void sendMessageAndControlStop() {
         threadPool.execute(() -> {
             try {
-                outToClientThread = Thread.currentThread();
+                sendThread = Thread.currentThread();
                 clientOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-                System.out.println("clientOut " + clientOut + "   outThread : " + outToClientThread);
+                System.out.println("clientOut " + clientOut );
                 while (true) {
                     //若客户端已关闭，则退出循环，关闭控制台输入监听
                     if (client.isClosed()) {
                         System.out.println("sendMessageAndControlStop - client is close");
+                        closeClient();
                         break;
                     }
-                    String str = scanner.nextLine();
-                    if ("stop".equals(str)) {
+                    //当客户端主动断开连接时，这里会阻塞
+                    sendMessage = scanner.nextLine();
+                    if ("stop".equals(sendMessage)) {
                         System.out.println("input stop");
                         closeClient();
                         break;
                     } else {
-                        clientOut.println(str);
-                        System.out.println("Server : Send : " + str);
+                        clientOut.println(sendMessage);
+                        System.out.println("Server : Send : " + sendMessage);
                         clientOut.flush();
                     }
                 }
@@ -123,17 +137,20 @@ public class MyService {
     }
 
 
-    public static void closeClient(){
+    /**
+     * 关闭客户连接时，需要清空一些变量
+     * */
+    public static void closeClient() {
         try {
             clientIn.close();
             clientOut.close();
             client.close();
-            if (!outToClientThread.isInterrupted()){
-                //当前活动线程数
-                outToClientThread.interrupt();
-                System.out.println("outThread is interrupt :"+outToClientThread.isInterrupted());
-                System.out.println("closeClient activityThread size :"+tpe.getActiveCount());
-            }
+            clientIn = null;
+            clientOut = null;
+            client = null;
+            //需要在这里关闭两个线程，输入消息线程会阻塞---
+            sendThread.interrupt();
+            receiverThread.interrupt();
         } catch (IOException e) {
             e.printStackTrace();
         }
