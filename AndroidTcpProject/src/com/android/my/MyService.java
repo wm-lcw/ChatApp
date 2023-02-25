@@ -80,7 +80,7 @@ public class MyService {
                         new InputStreamReader(client.getInputStream()));
                 System.out.println("connectClient--activityThread size :" + tpe.getActiveCount());
                 while (true) {
-                    if (client.isClosed()) {
+                    if (client == null || client.isClosed()) {
                         //若客户连接已关闭，就退出循环，不再接收当前客户的消息
                         System.out.println("receiverMessageFromClient - client is close");
                         closeClient();
@@ -89,6 +89,7 @@ public class MyService {
                     //当服务端主动关闭客户连接时，这里会阻塞线程
                     receiverMessage = clientIn.readLine();
                     if (receiverMessage == null || "".equals(receiverMessage) || "null".equals(receiverMessage)) {
+                        System.out.println("------receive : " + receiverMessage);
                         //读取到的消息为空，证明该客户已断开连接
                         closeClient();
                         break;
@@ -113,7 +114,7 @@ public class MyService {
                 System.out.println("clientOut " + clientOut );
                 while (true) {
                     //若客户端已关闭，则退出循环，关闭控制台输入监听
-                    if (client.isClosed()) {
+                    if (client == null || client.isClosed()) {
                         System.out.println("sendMessageAndControlStop - client is close");
                         closeClient();
                         break;
@@ -125,9 +126,11 @@ public class MyService {
                         closeClient();
                         break;
                     } else {
-                        clientOut.println(sendMessage);
-                        System.out.println("Server : Send : " + sendMessage);
-                        clientOut.flush();
+                        if (client != null){
+                            clientOut.println(sendMessage);
+                            System.out.println("Server : Send : " + sendMessage);
+                            clientOut.flush();
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -142,12 +145,21 @@ public class MyService {
      * */
     public static void closeClient() {
         try {
-            clientIn.close();
-            clientOut.close();
-            client.close();
-            clientIn = null;
-            clientOut = null;
-            client = null;
+            if (clientIn != null){
+                clientIn.close();
+                clientIn = null;
+            }
+            if (clientOut != null){
+                clientOut.close();
+                clientOut = null;
+            }
+
+            if (client != null){
+                client.close();
+                client = null;
+            }
+
+            scanner.close();
             //需要在这里关闭两个线程，输入消息线程会阻塞---
             sendThread.interrupt();
             receiverThread.interrupt();

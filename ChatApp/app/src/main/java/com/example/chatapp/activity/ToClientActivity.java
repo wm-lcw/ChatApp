@@ -1,9 +1,13 @@
 package com.example.chatapp.activity;
 
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.view.MotionEvent;
@@ -17,6 +21,7 @@ import android.widget.TextView;
 
 import com.example.chatapp.R;
 import com.example.chatapp.base.BasicActivity;
+import com.example.chatapp.service.ClientChatService;
 import com.example.chatapp.utils.ChatAppLog;
 
 import java.io.BufferedReader;
@@ -53,6 +58,7 @@ public class ToClientActivity extends BasicActivity {
     private String inPutIp, inPutPort;
     private String TCP_IP;
     private int TCP_PORT;
+    private ClientChatService clientChatService;
 
     private boolean isConnect = false;
 
@@ -74,16 +80,19 @@ public class ToClientActivity extends BasicActivity {
     BufferedReader mClientIn;
     PrintWriter mClientOut;
 
-    private static final int MSG_SEND = 1;
-    private static final int MSG_RECEIVE = 2;
-    private static final int MSG_SOCKET_CONNECT = 3;
-    private static final int MSG_SOCKET_CONNECT_FAIL = 4;
-    private static final int MSG_SOCKET_CLOSE = 5;
+    public static final int MSG_SEND = 1;
+    public static final int MSG_RECEIVE = 2;
+    public static final int MSG_SOCKET_CONNECT = 3;
+    public static final int MSG_SOCKET_CONNECT_FAIL = 4;
+    public static final int MSG_SOCKET_CLOSE = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initData();
+        //启动MusicPlayService服务
+        Intent bindIntent = new Intent(ToClientActivity.this, ClientChatService.class);
+        bindService(bindIntent, connection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -126,11 +135,9 @@ public class ToClientActivity extends BasicActivity {
                 } else {
                     TCP_IP = inPutIp;
                     TCP_PORT = Integer.parseInt(inPutPort);
-                    //暂时将服务器和端口写死
-//                    TCP_IP = "192.168.61.65";
                     TCP_PORT = 3333;
                     ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + TCP_PORT);
-                    toConnectService();
+                    clientChatService.connectSocket(TCP_IP, TCP_PORT);
                 }
                 //点击连接按钮之后隐藏键盘
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -144,6 +151,18 @@ public class ToClientActivity extends BasicActivity {
                 mHandler.sendEmptyMessage(MSG_SEND);
             }
 
+
+        }
+    };
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            clientChatService = ((ClientChatService.ClientBinder) service).getService(mContext, mHandler);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
 
         }
     };
@@ -229,22 +248,17 @@ public class ToClientActivity extends BasicActivity {
                 isConnect = true;
                 llRequestUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
-
             } else if (msg.what == MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
-                if (!"".equals(getInputMessage)) {
-                    threadPool.execute(() -> {
-                        mClientOut.println(getInputMessage);
-                        mClientOut.flush();
-                    });
-                    ChatAppLog.debug();
-                    String temp = tvChatRecord.getText().toString() + "\n\t\t\t\t\t\t\t\t" + getInputMessage;
-                    tvChatRecord.setText(temp);
-                    etInputMessage.setText("");
-                }
-
+                //发送消息给服务端
+                clientChatService.sendMessageToService(getInputMessage);
+                //刷新聊天框的记录
+                String temp = tvChatRecord.getText().toString() + "\n\t\t\t\t\t\t\t\t\t\t\t\t" + getInputMessage;
+                tvChatRecord.setText(temp);
+                etInputMessage.setText("");
             } else if (msg.what == MSG_RECEIVE) {
+                //收到服务端发送的消息
                 String receiverMessage = msg.getData().getString("receiverMessage").trim();
                 ChatAppLog.debug(receiverMessage);
                 String temp = tvChatRecord.getText().toString() + "\n\t" + receiverMessage;
@@ -253,20 +267,10 @@ public class ToClientActivity extends BasicActivity {
         }
     };
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        ChatAppLog.debug();
-        if (mSocket != null) {
-            closeConnection();
-            ChatAppLog.debug("close Socket");
-            isConnect = false;
-        }
-    }
 
     /**
      * 断开连接时关闭所有的流跟socket
-     * */
+     */
     public void closeConnection() {
         try {
             if (mClientOut != null) {
@@ -301,5 +305,31 @@ public class ToClientActivity extends BasicActivity {
             }
         }
         return super.onTouchEvent(event);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        ChatAppLog.debug();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        ChatAppLog.debug();
+        if (mSocket != null) {
+            clientChatService.closeConnection();
+            ChatAppLog.debug("close Socket");
+            isConnect = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (connection != null) {
+            ChatAppLog.debug("unbind service");
+            unbindService(connection);
+        }
     }
 }

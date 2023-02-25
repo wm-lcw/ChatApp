@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="109"
-    android:versionName="1.0.9">
+    android:versionCode="110"
+    android:versionName="1.1.0">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -16,6 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="30">
+        <service
+            android:name=".service.ClientChatService"
+            android:enabled="true"
+            android:exported="true"></service>
+
         <activity
             android:name=".activity.ClientChatActivity"
             android:exported="false">
