@@ -45,15 +45,14 @@ public class ClientChatService extends Service {
     private Socket mSocket;
     private String ipAddress;
     private int socketPort;
-    /**
-     * 从socket获取输入输出流
-     */
-    BufferedReader mClientIn;
-    PrintWriter mClientOut;
+    private boolean isConnect = false;
+
+    private BufferedReader mClientIn;
+    private PrintWriter mClientOut;
     /**
      * 创建线程池
      */
-    ExecutorService threadPool = new ThreadPoolExecutor(4,
+    private ExecutorService threadPool = new ThreadPoolExecutor(4,
             6,
             2L,
             TimeUnit.SECONDS,

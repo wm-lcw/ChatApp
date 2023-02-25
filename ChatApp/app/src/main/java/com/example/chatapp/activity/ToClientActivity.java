@@ -62,24 +62,6 @@ public class ToClientActivity extends BasicActivity {
 
     private boolean isConnect = false;
 
-    /**
-     * 创建线程池
-     */
-    ExecutorService threadPool = new ThreadPoolExecutor(4,
-            6,
-            2L,
-            TimeUnit.SECONDS,
-            new ArrayBlockingQueue<Runnable>(4),
-            Executors.defaultThreadFactory(),
-            new ThreadPoolExecutor.DiscardOldestPolicy());
-
-    private Socket mSocket;
-    /**
-     * 从socket获取输入输出流
-     */
-    BufferedReader mClientIn;
-    PrintWriter mClientOut;
-
     public static final int MSG_SEND = 1;
     public static final int MSG_RECEIVE = 2;
     public static final int MSG_SOCKET_CONNECT = 3;
@@ -168,67 +150,6 @@ public class ToClientActivity extends BasicActivity {
     };
 
     /**
-     * @param
-     * @return
-     * @version V1.0
-     * @Title toConnectService
-     * @author wm
-     * @createTime 2023/2/21 20:32
-     * @description 连接服务器
-     */
-    private void toConnectService() {
-        threadPool.execute(() -> {
-            try {
-                //指定ip地址和端口号
-                mSocket = new Socket(TCP_IP, TCP_PORT);
-                //获取输出流、输入流
-                mClientIn = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
-                mClientOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(mSocket.getOutputStream())), true);
-                startReceiverMessage();
-                mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT);
-            } catch (Exception e) {
-                e.printStackTrace();
-                ChatAppLog.error(e.toString());
-                mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT_FAIL);
-                return;
-            }
-            ChatAppLog.debug("connect success");
-
-        });
-    }
-
-    /**
-     * @param
-     * @return
-     * @version V1.0
-     * @Title startReceiverMessage
-     * @author wm
-     * @createTime 2023/2/22 21:24
-     * @description 接收服务端的信息
-     */
-    private void startReceiverMessage() {
-        threadPool.execute(() -> {
-            ChatAppLog.debug();
-            try {
-                while (true) {
-                    String str = mClientIn.readLine();
-                    if (str != null && !"".equals(str)) {
-                        Message message = new Message();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("receiverMessage", str);
-                        message.what = MSG_RECEIVE;
-                        message.setData(bundle);
-                        mHandler.sendMessage(message);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                ChatAppLog.error(e.toString());
-            }
-        });
-    }
-
-    /**
      * @version V1.0
      * @Title
      * @author wm
@@ -267,30 +188,6 @@ public class ToClientActivity extends BasicActivity {
         }
     };
 
-
-    /**
-     * 断开连接时关闭所有的流跟socket
-     */
-    public void closeConnection() {
-        try {
-            if (mClientOut != null) {
-                mClientOut.close(); //关闭输出流
-                mClientOut = null;
-            }
-            if (mClientIn != null) {
-                mClientIn.close(); //关闭输入流
-                mClientIn = null;
-            }
-            if (mSocket != null) {
-                mSocket.close();  //关闭socket
-                mSocket = null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     /**
      * 点击空白区域隐藏键盘.
      */
@@ -317,11 +214,6 @@ public class ToClientActivity extends BasicActivity {
     protected void onStop() {
         super.onStop();
         ChatAppLog.debug();
-        if (mSocket != null) {
-            clientChatService.closeConnection();
-            ChatAppLog.debug("close Socket");
-            isConnect = false;
-        }
     }
 
     @Override
@@ -329,6 +221,8 @@ public class ToClientActivity extends BasicActivity {
         super.onDestroy();
         if (connection != null) {
             ChatAppLog.debug("unbind service");
+            clientChatService.closeConnection();
+            isConnect = false;
             unbindService(connection);
         }
     }
