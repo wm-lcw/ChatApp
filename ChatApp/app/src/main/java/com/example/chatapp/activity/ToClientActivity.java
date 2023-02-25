@@ -6,7 +6,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -57,11 +59,11 @@ public class ToClientActivity extends BasicActivity {
     /**
      * 创建线程池
      */
-    ExecutorService threadPool = new ThreadPoolExecutor(3,
-            5,
+    ExecutorService threadPool = new ThreadPoolExecutor(4,
+            6,
             2L,
             TimeUnit.SECONDS,
-            new ArrayBlockingQueue<Runnable>(3),
+            new ArrayBlockingQueue<Runnable>(4),
             Executors.defaultThreadFactory(),
             new ThreadPoolExecutor.DiscardOldestPolicy());
 
@@ -117,7 +119,7 @@ public class ToClientActivity extends BasicActivity {
         @Override
         public void onClick(View view) {
             if (view == btConnect) {
-                inPutIp = etIpDress.getText().toString();
+                inPutIp = etIpDress.getText().toString().trim();
                 inPutPort = etPort.getText().toString();
                 if (inPutIp == null || "".equals(inPutIp) || "".equals(inPutPort)) {
                     showToash("please check IP or PORT format !!!");
@@ -125,10 +127,17 @@ public class ToClientActivity extends BasicActivity {
                     TCP_IP = inPutIp;
                     TCP_PORT = Integer.parseInt(inPutPort);
                     //暂时将服务器和端口写死
-                    TCP_IP = "192.168.141.65";
+//                    TCP_IP = "192.168.61.65";
                     TCP_PORT = 3333;
                     ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + TCP_PORT);
                     toConnectService();
+                }
+                //点击连接按钮之后隐藏键盘
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (ToClientActivity.this.getCurrentFocus() != null) {
+                    if (ToClientActivity.this.getCurrentFocus().getWindowToken() != null) {
+                        imm.hideSoftInputFromWindow(ToClientActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                    }
                 }
             } else if (view == btSendMessage) {
                 ChatAppLog.debug();
@@ -184,7 +193,6 @@ public class ToClientActivity extends BasicActivity {
             try {
                 while (true) {
                     String str = mClientIn.readLine();
-                    ChatAppLog.debug("receiver " + str);
                     if (str != null && !"".equals(str)) {
                         Message message = new Message();
                         Bundle bundle = new Bundle();
@@ -256,6 +264,9 @@ public class ToClientActivity extends BasicActivity {
         }
     }
 
+    /**
+     * 断开连接时关闭所有的流跟socket
+     * */
     public void closeConnection() {
         try {
             if (mClientOut != null) {
@@ -274,5 +285,21 @@ public class ToClientActivity extends BasicActivity {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * 点击空白区域隐藏键盘.
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (ToClientActivity.this.getCurrentFocus() != null) {
+                if (ToClientActivity.this.getCurrentFocus().getWindowToken() != null) {
+                    imm.hideSoftInputFromWindow(ToClientActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        }
+        return super.onTouchEvent(event);
     }
 }
