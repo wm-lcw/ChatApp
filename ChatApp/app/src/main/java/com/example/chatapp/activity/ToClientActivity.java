@@ -112,11 +112,12 @@ public class ToClientActivity extends BasicActivity {
             if (view == btConnect) {
                 inPutIp = etIpDress.getText().toString().trim();
                 inPutPort = etPort.getText().toString();
-                if (inPutIp == null || "".equals(inPutIp) || "".equals(inPutPort)) {
+                //暂时删除PORT端口的输入及判断，暂时写死为3333
+                if (inPutIp == null || "".equals(inPutIp)) {
                     showToash("please check IP or PORT format !!!");
                 } else {
                     TCP_IP = inPutIp;
-                    TCP_PORT = Integer.parseInt(inPutPort);
+//                    TCP_PORT = Integer.parseInt(inPutPort);
                     TCP_PORT = 3333;
                     ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + TCP_PORT);
                     clientChatService.connectSocket(TCP_IP, TCP_PORT);

@@ -12,7 +12,7 @@
 
     <LinearLayout
         android:id="@+id/ll_request_ui"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="150dp"
         android:layout_marginLeft="150dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,7 +32,8 @@
             android:layout_width="95dp"
             android:layout_height="wrap_content"
             android:inputType="number"
-            android:hint="input port" />
+            android:hint="input port"
+            android:visibility="gone"/>
 
         <Button
             android:id="@+id/bt_start"
