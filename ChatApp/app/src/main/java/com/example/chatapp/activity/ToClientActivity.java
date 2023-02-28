@@ -137,6 +137,7 @@ public class ToClientActivity extends BasicActivity {
                 mHandler.sendEmptyMessage(MSG_SEND);
             } else if (view == btBack) {
                 ChatAppLog.debug("back");
+                closeConnection();
                 finish();
             }
 
@@ -177,6 +178,7 @@ public class ToClientActivity extends BasicActivity {
                 llRequestUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
                 tvChatIp.setText(TCP_IP);
+//                clientChatService.monitorClientConnect();
             } else if (msg.what == MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
@@ -254,5 +256,6 @@ public class ToClientActivity extends BasicActivity {
         ChatAppLog.debug("");
         clientChatService.closeConnection();
         isConnect = false;
+//        clientChatService.closeMonitorThread();
     }
 }

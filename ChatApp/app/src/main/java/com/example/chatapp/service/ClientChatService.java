@@ -50,6 +50,8 @@ public class ClientChatService extends Service {
 
     private BufferedReader mClientIn;
     private PrintWriter mClientOut;
+
+    private Thread monitorThread;
     /**
      * 创建线程池
      */
@@ -159,7 +161,7 @@ public class ClientChatService extends Service {
                         Message message = new Message();
                         Bundle bundle = new Bundle();
                         bundle.putString("receiverMessage", str);
-                        if ("stop".equals(str)){
+                        if ("stop".equals(str)) {
                             ChatAppLog.debug();
                             //若接收到的是“stop”，表示是服务端终止了会话(好像是接收不到，service发不出来)
                             message.what = MSG_SOCKET_CLOSE;
@@ -188,15 +190,22 @@ public class ClientChatService extends Service {
      */
     public void closeConnection() {
         try {
+            if (mSocket.isClosed()){
+                //加上判断，若socket已断开，就不再重复执行以下操作
+                return;
+            }
+            //只要关闭一个流，socket就会被关闭
+            ChatAppLog.debug("isClose : " + mSocket.isClosed());
             if (mClientOut != null) {
                 mClientOut.close(); //关闭输出流
                 mClientOut = null;
             }
+
             if (mClientIn != null) {
                 mClientIn.close(); //关闭输入流
                 mClientIn = null;
             }
-            if (mSocket != null && !mSocket.isClosed()) {
+            if (mSocket != null) {
                 mSocket.close();  //关闭socket
                 mSocket.shutdownOutput();
                 mSocket = null;
@@ -207,5 +216,55 @@ public class ClientChatService extends Service {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title monitorClientConnect
+     * @author wm
+     * @createTime 2023/2/28 13:53
+     * @description 开启线程监听连接状态
+     */
+    public void monitorClientConnect() {
+        threadPool.execute(() -> {
+            monitorThread = Thread.currentThread();
+            while (true) {
+                ChatAppLog.debug("isClose : " + mSocket.isClosed());
+                if (mSocket.isClosed()) {
+                    closeConnection();
+                    Message message = new Message();
+                    message.what = MSG_SOCKET_CLOSE;
+                    mHandler.sendMessage(message);
+                    break;
+                }
+
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title closeMonitorThread
+     * @author wm
+     * @createTime 2023/2/28 13:56
+     * @description 关闭监听线程
+     */
+    public void closeMonitorThread() {
+        try {
+            monitorThread.interrupt();
+        } catch (Exception e) {
+            e.printStackTrace();
+            ChatAppLog.error(e.getMessage());
+        }
     }
 }
