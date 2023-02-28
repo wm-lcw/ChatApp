@@ -1,6 +1,7 @@
 package com.example.chatapp.service;
 
 import static com.example.chatapp.activity.ToClientActivity.MSG_RECEIVE;
+import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CLOSE;
 import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CONNECT;
 import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CONNECT_FAIL;
 
@@ -45,7 +46,7 @@ public class ClientChatService extends Service {
     private Socket mSocket;
     private String ipAddress;
     private int socketPort;
-    private boolean isConnect = false;
+    private boolean socketConnectState = false;
 
     private BufferedReader mClientIn;
     private PrintWriter mClientOut;
@@ -104,6 +105,8 @@ public class ClientChatService extends Service {
                     startReceiverMessage();
                     //回传消息给Activity，刷新聊天页面
                     mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT);
+                    //设置连接状态
+                    socketConnectState = true;
                 }
             } catch (IOException e) {
                 ChatAppLog.error(e.toString());
@@ -156,7 +159,14 @@ public class ClientChatService extends Service {
                         Message message = new Message();
                         Bundle bundle = new Bundle();
                         bundle.putString("receiverMessage", str);
-                        message.what = MSG_RECEIVE;
+                        if ("stop".equals(str)){
+                            ChatAppLog.debug();
+                            //若接收到的是“stop”，表示是服务端终止了会话(好像是接收不到，service发不出来)
+                            message.what = MSG_SOCKET_CLOSE;
+                        } else {
+                            //其他的消息正常的显示
+                            message.what = MSG_RECEIVE;
+                        }
                         message.setData(bundle);
                         mHandler.sendMessage(message);
                     }
@@ -186,10 +196,13 @@ public class ClientChatService extends Service {
                 mClientIn.close(); //关闭输入流
                 mClientIn = null;
             }
-            if (mSocket != null) {
+            if (mSocket != null && !mSocket.isClosed()) {
                 mSocket.close();  //关闭socket
+                mSocket.shutdownOutput();
                 mSocket = null;
             }
+            //设置连接状态
+            socketConnectState = false;
         } catch (IOException e) {
             e.printStackTrace();
         }

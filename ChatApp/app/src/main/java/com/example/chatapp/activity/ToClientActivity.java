@@ -24,19 +24,6 @@ import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.service.ClientChatService;
 import com.example.chatapp.utils.ChatAppLog;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 /**
  * @ClassName: ToClientActivity
  * @Description: 客户端登录界面/聊天界面
@@ -51,10 +38,10 @@ public class ToClientActivity extends BasicActivity {
 
     private Context mContext;
     private EditText etIpDress, etPort, etInputMessage;
-    private Button btConnect, btSendMessage;
+    private Button btConnect, btSendMessage, btBack;
     private LinearLayout llRequestUi;
     private RelativeLayout rlChatUi;
-    private TextView tvChatRecord;
+    private TextView tvChatIp,tvChatRecord;
     private String inPutIp, inPutPort;
     private String TCP_IP;
     private int TCP_PORT;
@@ -104,6 +91,22 @@ public class ToClientActivity extends BasicActivity {
         etInputMessage = findViewById(R.id.et_input_message);
         btSendMessage = findViewById(R.id.bt_send_message);
         btSendMessage.setOnClickListener(mListen);
+
+        btBack = findViewById(R.id.btn_back);
+        tvChatIp = findViewById(R.id.tv_chat_ip);
+        btBack.setOnClickListener(mListen);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isConnect) {
+            llRequestUi.setVisibility(View.GONE);
+            rlChatUi.setVisibility(View.VISIBLE);
+        } else {
+            llRequestUi.setVisibility(View.VISIBLE);
+            rlChatUi.setVisibility(View.GONE);
+        }
     }
 
     View.OnClickListener mListen = new View.OnClickListener() {
@@ -132,6 +135,9 @@ public class ToClientActivity extends BasicActivity {
             } else if (view == btSendMessage) {
                 ChatAppLog.debug();
                 mHandler.sendEmptyMessage(MSG_SEND);
+            } else if (view == btBack) {
+                ChatAppLog.debug("back");
+                finish();
             }
 
 
@@ -170,6 +176,7 @@ public class ToClientActivity extends BasicActivity {
                 isConnect = true;
                 llRequestUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
+                tvChatIp.setText(TCP_IP);
             } else if (msg.what == MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
@@ -182,9 +189,16 @@ public class ToClientActivity extends BasicActivity {
             } else if (msg.what == MSG_RECEIVE) {
                 //收到服务端发送的消息
                 String receiverMessage = msg.getData().getString("receiverMessage").trim();
-                ChatAppLog.debug(receiverMessage);
+                ChatAppLog.debug("receiveMessage "+receiverMessage);
                 String temp = tvChatRecord.getText().toString() + "\n\t" + receiverMessage;
                 tvChatRecord.setText(temp);
+            } else if (msg.what == MSG_SOCKET_CLOSE) {
+                ChatAppLog.debug("disconnect!!!");
+                showToash("连接已断开，请重新连接！");
+                //收到服务端中断的信息
+                closeConnection();
+                llRequestUi.setVisibility(View.VISIBLE);
+                rlChatUi.setVisibility(View.GONE);
             }
         }
     };
@@ -220,11 +234,25 @@ public class ToClientActivity extends BasicActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        ChatAppLog.debug();
+        closeConnection();
         if (connection != null) {
-            ChatAppLog.debug("unbind service");
-            clientChatService.closeConnection();
-            isConnect = false;
             unbindService(connection);
         }
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title closeConnection
+     * @author wm
+     * @createTime 2023/2/27 15:57
+     * @description 关闭连接
+     */
+    private void closeConnection() {
+        ChatAppLog.debug("");
+        clientChatService.closeConnection();
+        isConnect = false;
     }
 }
