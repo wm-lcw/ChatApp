@@ -50,33 +50,39 @@
         android:visibility="gone">
 
         <LinearLayout
+            android:id="@+id/ll_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
             <Button
                 android:id="@+id/btn_back"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="back"/>
+                android:text="back" />
+
             <TextView
-                android:gravity="center"
                 android:id="@+id/tv_chat_ip"
-                android:textSize="16sp"
-                android:text="Service IP"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Service IP"
+                android:textSize="16sp" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/msg_recycle_view"
-            android:layout_marginTop="50dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/rl_input_view"
+            android:layout_below="@+id/ll_title"
+            android:layout_marginBottom="10dp" />
 
         <RelativeLayout
-            android:layout_alignParentBottom="true"
+            android:id="@+id/rl_input_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true">
 
             <EditText
                 android:id="@+id/et_input_message"
@@ -96,7 +102,6 @@
         </RelativeLayout>
 
     </RelativeLayout>
-
 
 
 </LinearLayout>
