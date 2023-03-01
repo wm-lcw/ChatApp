@@ -177,7 +177,7 @@ public class ServerChatService extends Service {
     public void closeClient() {
         try {
             //加上判断，若socket已断开，就不再重复执行以下操作
-            if (client.isClosed()) {
+            if (client == null || client.isClosed()) {
                 return;
             }
             if (serverIn != null) {

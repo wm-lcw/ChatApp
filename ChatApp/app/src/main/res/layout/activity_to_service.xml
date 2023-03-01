@@ -24,7 +24,8 @@
             android:id="@+id/ll_service_pre"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone">
             <EditText
                 android:layout_gravity="center"
                 android:id="@+id/et_service_port"
@@ -32,20 +33,13 @@
                 android:layout_height="wrap_content"
                 android:inputType="number"
                 android:hint="input port"/>
-
-            <Button
-                android:id="@+id/bt_service_listen"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="start listen"/>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/ll_service_listing"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:orientation="vertical">
             <TextView
                 android:layout_gravity="center"
                 android:id="@+id/tv_service_ip"
@@ -54,10 +48,17 @@
                 android:text="IP:192.168.42.65"/>
 
             <Button
+                android:id="@+id/bt_service_listen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="start listen"/>
+            <Button
                 android:id="@+id/bt_service_cancel_listen"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="cancel listen"/>
+                android:text="cancel listen"
+                android:visibility="gone"/>
+
         </LinearLayout>
 
     </LinearLayout>

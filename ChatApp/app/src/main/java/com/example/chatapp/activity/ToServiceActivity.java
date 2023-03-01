@@ -27,6 +27,7 @@ import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Msg;
 import com.example.chatapp.service.ServerChatService;
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.NetWorkUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,8 @@ public class ToServiceActivity extends BasicActivity {
     private TextView tvServiceIp, tvChatIp;
     private String inPutIp, inPutPort;
     private String TCP_IP;
-    private int TCP_PORT;
+    private final int TCP_PORT = 3333;
+    private boolean connectState = false;
 
     public static final int MSG_SEND = 1;
     public static final int MSG_RECEIVE = 2;
@@ -68,10 +70,25 @@ public class ToServiceActivity extends BasicActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = this;
         Intent bindIntent = new Intent(ToServiceActivity.this, ServerChatService.class);
         bindService(bindIntent, connection, BIND_AUTO_CREATE);
         initData();
         initAdapter();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (connectState) {
+            llListenUi.setVisibility(View.GONE);
+            rlChatUi.setVisibility(View.VISIBLE);
+        } else {
+            llListenUi.setVisibility(View.VISIBLE);
+            rlChatUi.setVisibility(View.GONE);
+            String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
+            tvServiceIp.setText(ipMessage);
+        }
     }
 
     @Override
@@ -89,7 +106,7 @@ public class ToServiceActivity extends BasicActivity {
      * @description 初始化布局、数据
      */
     private void initData() {
-        mContext = this;
+
         etPort = findViewById(R.id.et_service_port);
         btListen = findViewById(R.id.bt_service_listen);
         btListen.setOnClickListener(mListen);
@@ -103,6 +120,7 @@ public class ToServiceActivity extends BasicActivity {
         btBack = findViewById(R.id.btn_service_back);
         btBack.setOnClickListener(mListen);
         tvChatIp = findViewById(R.id.tv_service_chat_ip);
+        tvServiceIp = findViewById(R.id.tv_service_ip);
 
         llListing = findViewById(R.id.ll_service_listing);
         llListenPre = findViewById(R.id.ll_service_pre);
@@ -112,13 +130,13 @@ public class ToServiceActivity extends BasicActivity {
     }
 
     /**
-     *  @version V1.0
-     *  @Title initAdapter
-     *  @author wm
-     *  @createTime 2023/3/1 19:25
-     *  @description 初始化适配器
-     *  @param
-     *  @return 
+     * @param
+     * @return
+     * @version V1.0
+     * @Title initAdapter
+     * @author wm
+     * @createTime 2023/3/1 19:25
+     * @description 初始化适配器
      */
     private void initAdapter() {
         msgRecyclerView = findViewById(R.id.msg_recycle_view);
@@ -144,10 +162,9 @@ public class ToServiceActivity extends BasicActivity {
         @Override
         public void onClick(View view) {
             if (view == btListen) {
-                inPutPort = etPort.getText().toString();
                 ChatAppLog.debug("server " + serverChatService);
                 if (serverChatService != null) {
-                    serverChatService.startListen(Integer.parseInt(inPutPort));
+                    serverChatService.startListen(TCP_PORT);
                 }
                 mHandler.sendEmptyMessage(MSG_SOCKET_LISTING);
                 //点击开始监听按钮之后隐藏键盘
@@ -188,6 +205,7 @@ public class ToServiceActivity extends BasicActivity {
                 llListenUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
                 tvChatIp.setText(clientIp);
+                connectState = true;
             } else if (msg.what == MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
@@ -219,18 +237,17 @@ public class ToServiceActivity extends BasicActivity {
                 llListenUi.setVisibility(View.VISIBLE);
                 rlChatUi.setVisibility(View.GONE);
                 serverChatService.closeClient();
+                connectState = false;
             } else if (msg.what == MSG_SOCKET_LISTING) {
                 showToash("开始监听！");
-                rlChatUi.setVisibility(View.GONE);
-                llListenUi.setVisibility(View.VISIBLE);
-                llListenPre.setVisibility(View.GONE);
-                llListing.setVisibility(View.VISIBLE);
+                btListen.setVisibility(View.GONE);
+                btStopListen.setVisibility(View.VISIBLE);
+                String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
+                tvServiceIp.setText(ipMessage);
             } else if (msg.what == MSG_SOCKET_STOP_LISTING) {
                 showToash("取消监听！");
-                rlChatUi.setVisibility(View.GONE);
-                llListenUi.setVisibility(View.VISIBLE);
-                llListenPre.setVisibility(View.VISIBLE);
-                llListing.setVisibility(View.GONE);
+                btListen.setVisibility(View.VISIBLE);
+                btStopListen.setVisibility(View.GONE);
                 serverChatService.stopListen();
             }
         }
@@ -279,4 +296,6 @@ public class ToServiceActivity extends BasicActivity {
             }
         }
     }
+
+
 }

@@ -142,7 +142,7 @@ public class ToClientActivity extends BasicActivity {
         public void onClick(View view) {
             if (view == btConnect) {
                 inPutIp = etIpDress.getText().toString().trim();
-                inPutPort = etPort.getText().toString();
+                inPutPort = etPort.getText().toString().trim();
                 //暂时删除PORT端口的输入及判断，暂时写死为3333
                 if (inPutIp == null || "".equals(inPutIp)) {
                     showToash("please check IP or PORT format !!!");
