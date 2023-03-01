@@ -67,12 +67,9 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
-        <TextView
-            android:layout_marginLeft="15dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/msg_recycle_view"
             android:layout_marginTop="50dp"
-            android:id="@+id/tv_chat_record"
-            android:textSize="16sp"
-            android:text=""
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 

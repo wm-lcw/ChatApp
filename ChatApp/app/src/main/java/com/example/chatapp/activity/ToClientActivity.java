@@ -19,10 +19,18 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.chatapp.R;
+import com.example.chatapp.adapter.MsgAdapter;
 import com.example.chatapp.base.BasicActivity;
+import com.example.chatapp.bean.Msg;
 import com.example.chatapp.service.ClientChatService;
 import com.example.chatapp.utils.ChatAppLog;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @ClassName: ToClientActivity
@@ -41,11 +49,15 @@ public class ToClientActivity extends BasicActivity {
     private Button btConnect, btSendMessage, btBack;
     private LinearLayout llRequestUi;
     private RelativeLayout rlChatUi;
-    private TextView tvChatIp,tvChatRecord;
+    private TextView tvChatIp;
     private String inPutIp, inPutPort;
     private String TCP_IP;
     private int TCP_PORT;
     private ClientChatService clientChatService;
+
+    private List<Msg> msgList = new ArrayList<>();
+    private RecyclerView msgRecyclerView;
+    private MsgAdapter adapter;
 
     private boolean isConnect = false;
 
@@ -59,9 +71,18 @@ public class ToClientActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initData();
+        initAdapter();
         //启动MusicPlayService服务
         Intent bindIntent = new Intent(ToClientActivity.this, ClientChatService.class);
         bindService(bindIntent, connection, BIND_AUTO_CREATE);
+    }
+
+    private void initAdapter() {
+        msgRecyclerView = (RecyclerView)findViewById(R.id.msg_recycle_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        msgRecyclerView.setLayoutManager(layoutManager);
+        adapter = new MsgAdapter(msgList);
+        msgRecyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -87,7 +108,6 @@ public class ToClientActivity extends BasicActivity {
 
         llRequestUi = findViewById(R.id.ll_request_ui);
         rlChatUi = findViewById(R.id.rl_chat_ui);
-        tvChatRecord = findViewById(R.id.tv_chat_record);
         etInputMessage = findViewById(R.id.et_input_message);
         btSendMessage = findViewById(R.id.bt_send_message);
         btSendMessage.setOnClickListener(mListen);
@@ -182,15 +202,24 @@ public class ToClientActivity extends BasicActivity {
                 //发送消息给服务端
                 clientChatService.sendMessageToService(getInputMessage);
                 //刷新聊天框的记录
-                String temp = tvChatRecord.getText().toString() + "\n\t\t\t\t\t\t\t\t\t\t\t\t" + getInputMessage;
-                tvChatRecord.setText(temp);
+                Msg msg1 = new Msg(getInputMessage,Msg.TYPE_SEND);
+                msgList.add(msg1);
+                //当有新消息，刷新RecyclerVeiw的显示
+                adapter.notifyItemInserted(msgList.size() - 1);
+                //将RecyclerView定位到最后一行
+                msgRecyclerView.scrollToPosition(msgList.size() - 1);
+                //清空输入框内容
                 etInputMessage.setText("");
             } else if (msg.what == MSG_RECEIVE) {
                 //收到服务端发送的消息
                 String receiverMessage = msg.getData().getString("receiverMessage").trim();
                 ChatAppLog.debug("receiveMessage "+receiverMessage);
-                String temp = tvChatRecord.getText().toString() + "\n\t" + receiverMessage;
-                tvChatRecord.setText(temp);
+                Msg msg1 = new Msg(receiverMessage,Msg.TYPE_RECEIVED);
+                msgList.add(msg1);
+                //当有新消息，刷新RecyclerVeiw的显示
+                adapter.notifyItemInserted(msgList.size() - 1);
+                //将RecyclerView定位到最后一行
+                msgRecyclerView.scrollToPosition(msgList.size() - 1);
             } else if (msg.what == MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
                 showToash("连接已断开，请重新连接！");
