@@ -126,15 +126,12 @@ public class ToClientActivity extends BasicActivity {
                     clientChatService.connectSocket(TCP_IP, TCP_PORT);
                 }
                 //点击连接按钮之后隐藏键盘
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (ToClientActivity.this.getCurrentFocus() != null) {
-                    if (ToClientActivity.this.getCurrentFocus().getWindowToken() != null) {
-                        imm.hideSoftInputFromWindow(ToClientActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                    }
-                }
+                hideKeyBoard();
             } else if (view == btSendMessage) {
                 ChatAppLog.debug();
                 mHandler.sendEmptyMessage(MSG_SEND);
+                //点击发送键之后隐藏键盘
+                hideKeyBoard();
             } else if (view == btBack) {
                 ChatAppLog.debug("back");
                 closeConnection();
@@ -204,6 +201,24 @@ public class ToClientActivity extends BasicActivity {
             }
         }
     };
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title hideKeyBoard
+     * @author wm
+     * @createTime 2023/3/1 17:06
+     * @description 隐藏键盘
+     */
+    private void hideKeyBoard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (ToClientActivity.this.getCurrentFocus() != null) {
+            if (ToClientActivity.this.getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(ToClientActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
 
     /**
      * 点击空白区域隐藏键盘.

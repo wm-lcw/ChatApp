@@ -229,7 +229,16 @@ public class ToServiceActivity extends BasicActivity {
         }
     }
 
-    private void hideKeyBoard(){
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title hideKeyBoard
+     * @author wm
+     * @createTime 2023/3/1 17:06
+     * @description 隐藏键盘
+     */
+    private void hideKeyBoard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (ToServiceActivity.this.getCurrentFocus() != null) {
             if (ToServiceActivity.this.getCurrentFocus().getWindowToken() != null) {
