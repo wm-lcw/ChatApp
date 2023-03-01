@@ -1,6 +1,5 @@
 package com.example.chatapp.activity;
 
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -77,14 +76,6 @@ public class ToClientActivity extends BasicActivity {
         bindService(bindIntent, connection, BIND_AUTO_CREATE);
     }
 
-    private void initAdapter() {
-        msgRecyclerView = (RecyclerView)findViewById(R.id.msg_recycle_view);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        msgRecyclerView.setLayoutManager(layoutManager);
-        adapter = new MsgAdapter(msgList);
-        msgRecyclerView.setAdapter(adapter);
-    }
-
     @Override
     public int getLayoutId() {
         return R.layout.activity_to_client;
@@ -115,6 +106,23 @@ public class ToClientActivity extends BasicActivity {
         btBack = findViewById(R.id.btn_back);
         tvChatIp = findViewById(R.id.tv_chat_ip);
         btBack.setOnClickListener(mListen);
+    }
+
+    /**
+     *  @version V1.0
+     *  @Title initAdapter
+     *  @author wm
+     *  @createTime 2023/3/1 19:23
+     *  @description 初始化适配器
+     *  @param
+     *  @return
+     */
+    private void initAdapter() {
+        msgRecyclerView = findViewById(R.id.msg_recycle_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        msgRecyclerView.setLayoutManager(layoutManager);
+        adapter = new MsgAdapter(msgList);
+        msgRecyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -202,7 +210,7 @@ public class ToClientActivity extends BasicActivity {
                 //发送消息给服务端
                 clientChatService.sendMessageToService(getInputMessage);
                 //刷新聊天框的记录
-                Msg msg1 = new Msg(getInputMessage,Msg.TYPE_SEND);
+                Msg msg1 = new Msg(getInputMessage, Msg.TYPE_SEND);
                 msgList.add(msg1);
                 //当有新消息，刷新RecyclerVeiw的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
@@ -213,8 +221,8 @@ public class ToClientActivity extends BasicActivity {
             } else if (msg.what == MSG_RECEIVE) {
                 //收到服务端发送的消息
                 String receiverMessage = msg.getData().getString("receiverMessage").trim();
-                ChatAppLog.debug("receiveMessage "+receiverMessage);
-                Msg msg1 = new Msg(receiverMessage,Msg.TYPE_RECEIVED);
+                ChatAppLog.debug("receiveMessage " + receiverMessage);
+                Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
                 msgList.add(msg1);
                 //当有新消息，刷新RecyclerVeiw的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
