@@ -1,9 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.ToServiceActivity">
+    tools:context=".activity.ToServiceActivity"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@mipmap/ic_client_main">
+
+    <LinearLayout
+        android:id="@+id/ll_service_listen_ui"
+        android:layout_marginTop="150dp"
+        android:layout_marginLeft="150dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+
+        <LinearLayout
+            android:id="@+id/ll_service_pre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <EditText
+                android:layout_gravity="center"
+                android:id="@+id/et_service_port"
+                android:layout_width="95dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="input port"/>
+
+            <Button
+                android:id="@+id/bt_service_listen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="start listen"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_service_listing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+            <TextView
+                android:layout_gravity="center"
+                android:id="@+id/tv_service_ip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="IP:192.168.42.65"/>
+
+            <Button
+                android:id="@+id/bt_service_cancel_listen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="cancel listen"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_service_chat_ui"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/btn_service_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="close"/>
+            <TextView
+                android:gravity="center"
+                android:id="@+id/tv_service_chat_ip"
+                android:textSize="16sp"
+                android:text="Service IP"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="50dp"
+            android:id="@+id/tv_service_chat_record"
+            android:textSize="16sp"
+            android:text=""
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <RelativeLayout
+            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/et_service_input_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="10dp"
+                android:layout_toLeftOf="@+id/bt_service_send_message" />
+
+            <Button
+                android:id="@+id/bt_service_send_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:text="send" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
 
 </LinearLayout>

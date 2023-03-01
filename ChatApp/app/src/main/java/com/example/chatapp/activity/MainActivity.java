@@ -37,10 +37,10 @@ public class MainActivity extends BasicActivity {
     View.OnClickListener mListen = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (v == ivClient){
-                startActivity(new Intent(MainActivity.this,ToClientActivity.class));
-            } else if (v == ivService){
-                startActivity(new Intent(MainActivity.this,ToServiceActivity.class));
+            if (v == ivClient) {
+                startActivity(new Intent(MainActivity.this, ToClientActivity.class));
+            } else if (v == ivService) {
+                startActivity(new Intent(MainActivity.this, ToServiceActivity.class));
             }
         }
     };

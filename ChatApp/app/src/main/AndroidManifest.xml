@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:versionCode="114"
-    android:versionName="1.1.4">
+    android:versionCode="115"
+    android:versionName="1.1.5">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -17,9 +17,13 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="30">
         <service
-            android:name=".service.ClientChatService"
+            android:name=".service.ServerChatService"
             android:enabled="true"
             android:exported="true"/>
+        <service
+            android:name=".service.ClientChatService"
+            android:enabled="true"
+            android:exported="true" />
 
         <activity
             android:name=".activity.ClientChatActivity"
@@ -30,7 +34,8 @@
         </activity>
         <activity
             android:name=".activity.ToServiceActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden|stateHidden|adjustResize" />
         <!--
             Activity 使用windowSoftInputMode属性是为了弹出键盘时不将布局顶出，
             而是保持在屏幕显示范围内，但是这样做会导致布局内容压缩
