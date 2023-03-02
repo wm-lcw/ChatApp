@@ -27,6 +27,7 @@ import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Msg;
 import com.example.chatapp.service.ClientChatService;
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.Constant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,14 +58,7 @@ public class ToClientActivity extends BasicActivity {
     private List<Msg> msgList = new ArrayList<>();
     private RecyclerView msgRecyclerView;
     private MsgAdapter adapter;
-
     private boolean isConnect = false;
-
-    public static final int MSG_SEND = 1;
-    public static final int MSG_RECEIVE = 2;
-    public static final int MSG_SOCKET_CONNECT = 3;
-    public static final int MSG_SOCKET_CONNECT_FAIL = 4;
-    public static final int MSG_SOCKET_CLOSE = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,7 +156,7 @@ public class ToClientActivity extends BasicActivity {
                 hideKeyBoard();
             } else if (view == btSendMessage) {
                 ChatAppLog.debug();
-                mHandler.sendEmptyMessage(MSG_SEND);
+                mHandler.sendEmptyMessage(Constant.MSG_SEND);
                 //点击发送键之后隐藏键盘
                 hideKeyBoard();
             } else if (view == btBack) {
@@ -199,17 +193,17 @@ public class ToClientActivity extends BasicActivity {
     final Handler mHandler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == MSG_SOCKET_CONNECT_FAIL) {
+            if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
                 showToash("connect fail! check your IP and PORT!");
-            } else if (msg.what == MSG_SOCKET_CONNECT) {
+            } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;
                 llRequestUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
                 tvChatIp.setText(TCP_IP);
 //                clientChatService.monitorClientConnect();
-            } else if (msg.what == MSG_SEND) {
+            } else if (msg.what == Constant.MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
                 //发送消息给服务端
@@ -223,7 +217,7 @@ public class ToClientActivity extends BasicActivity {
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
                 //清空输入框内容
                 etInputMessage.setText("");
-            } else if (msg.what == MSG_RECEIVE) {
+            } else if (msg.what == Constant.MSG_RECEIVE) {
                 //收到服务端发送的消息
                 String receiverMessage = msg.getData().getString("receiverMessage").trim();
                 ChatAppLog.debug("receiveMessage " + receiverMessage);
@@ -233,7 +227,7 @@ public class ToClientActivity extends BasicActivity {
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
-            } else if (msg.what == MSG_SOCKET_CLOSE) {
+            } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
                 showToash("连接已断开，请重新连接！");
                 //收到服务端中断的信息

@@ -33,6 +33,7 @@ import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Msg;
 import com.example.chatapp.service.ServerChatService;
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.Constant;
 import com.example.chatapp.utils.NetWorkUtils;
 
 import java.util.ArrayList;
@@ -56,17 +57,10 @@ public class ToServiceActivity extends BasicActivity {
     private RelativeLayout rlChatUi;
     private TextView tvServiceIp, tvChatIp;
     private String inPutIp, inPutPort;
-    private String TCP_IP;
     private final int TCP_PORT = 3333;
     private boolean connectState = false;
 
-    public static final int MSG_SEND = 1;
-    public static final int MSG_RECEIVE = 2;
-    public static final int MSG_SOCKET_CONNECT = 3;
-    public static final int MSG_SOCKET_CONNECT_FAIL = 4;
-    public static final int MSG_SOCKET_CLOSE = 5;
-    public static final int MSG_SOCKET_LISTING = 6;
-    public static final int MSG_SOCKET_STOP_LISTING = 7;
+
 
     private ServerChatService serverChatService;
     private List<Msg> msgList = new ArrayList<>();
@@ -165,9 +159,9 @@ public class ToServiceActivity extends BasicActivity {
         Button btnRevert = (Button) view.findViewById(R.id.btn_revert);
         Button btnDelete = (Button) view.findViewById(R.id.btn_delete);
         Button btnCopy = (Button) view.findViewById(R.id.btn_copy);
-        btnRevert.setPadding(0,0,0,0);
-        btnDelete.setPadding(0,0,0,0);
-        btnCopy.setPadding(0,0,0,0);
+        btnRevert.setPadding(0, 0, 0, 0);
+        btnDelete.setPadding(0, 0, 0, 0);
+        btnCopy.setPadding(0, 0, 0, 0);
         //构造一个PopupWindow，参数依次是加载的View，宽高，是否可获取焦点
         final PopupWindow popWindow = new PopupWindow(view,
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -191,17 +185,11 @@ public class ToServiceActivity extends BasicActivity {
         }
         //要为popWindow设置一个背景才有效
         popWindow.setBackgroundDrawable(new ColorDrawable(0x00000000));
-        int xLocation, yLocation;
-        if (messageType == 1) {
-            //如果是对方发送的消息，需要隐藏撤回按钮；弹窗位置也要改变
-            btnRevert.setVisibility(View.GONE);
-            xLocation = 20;
-            yLocation = 10;
-        } else {
-            btnRevert.setVisibility(View.VISIBLE);
-            xLocation = 20;
-            yLocation = 10;
-        }
+        int xLocation = 20, yLocation = 10;
+
+        //如果是对方发送的消息，需要隐藏撤回按钮
+        btnRevert.setVisibility(messageType == 1 ? View.GONE : View.VISIBLE);
+
         //设置popupWindow显示的位置，参数依次是参照传进来的组件View，x轴的偏移量，y轴的偏移量
         popWindow.showAsDropDown(v, xLocation, yLocation);
 
@@ -247,15 +235,15 @@ public class ToServiceActivity extends BasicActivity {
                 if (serverChatService != null) {
                     serverChatService.startListen(TCP_PORT);
                 }
-                mHandler.sendEmptyMessage(MSG_SOCKET_LISTING);
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_LISTING);
                 //点击开始监听按钮之后隐藏键盘
                 hideKeyBoard();
             } else if (view == btSendMessage) {
-                mHandler.sendEmptyMessage(MSG_SEND);
+                mHandler.sendEmptyMessage(Constant.MSG_SEND);
                 //发送消息之后隐藏键盘
                 hideKeyBoard();
             } else if (view == btStopListen) {
-                mHandler.sendEmptyMessage(MSG_SOCKET_STOP_LISTING);
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_STOP_LISTING);
             } else if (view == btBack) {
                 ChatAppLog.debug("back");
                 finish();
@@ -277,17 +265,17 @@ public class ToServiceActivity extends BasicActivity {
     final Handler mHandler = new Handler(Looper.myLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == MSG_SOCKET_CONNECT_FAIL) {
+            if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
                 showToash("connect fail! check your Network and PORT!");
-            } else if (msg.what == MSG_SOCKET_CONNECT) {
+            } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("client connect success");
                 String clientIp = msg.getData().getString("clientIp").trim();
                 llListenUi.setVisibility(View.GONE);
                 rlChatUi.setVisibility(View.VISIBLE);
                 tvChatIp.setText(clientIp);
                 connectState = true;
-            } else if (msg.what == MSG_SEND) {
+            } else if (msg.what == Constant.MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
                 //发送消息给服务端
@@ -301,7 +289,7 @@ public class ToServiceActivity extends BasicActivity {
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
                 //清空输入框内容
                 etInputMessage.setText("");
-            } else if (msg.what == MSG_RECEIVE) {
+            } else if (msg.what == Constant.MSG_RECEIVE) {
                 //收到客户端发送的消息
                 String receiverMessage = msg.getData().getString("receiveMessage").trim();
                 ChatAppLog.debug("receiveMessage " + receiverMessage);
@@ -311,7 +299,7 @@ public class ToServiceActivity extends BasicActivity {
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
-            } else if (msg.what == MSG_SOCKET_CLOSE) {
+            } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
                 showToash("连接已断开，请重新连接！");
                 //收到服务端中断的信息
@@ -319,13 +307,13 @@ public class ToServiceActivity extends BasicActivity {
                 rlChatUi.setVisibility(View.GONE);
                 serverChatService.closeClient();
                 connectState = false;
-            } else if (msg.what == MSG_SOCKET_LISTING) {
+            } else if (msg.what == Constant.MSG_SOCKET_LISTING) {
                 showToash("开始监听！");
                 btListen.setVisibility(View.GONE);
                 btStopListen.setVisibility(View.VISIBLE);
                 String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
                 tvServiceIp.setText(ipMessage);
-            } else if (msg.what == MSG_SOCKET_STOP_LISTING) {
+            } else if (msg.what == Constant.MSG_SOCKET_STOP_LISTING) {
                 showToash("取消监听！");
                 btListen.setVisibility(View.VISIBLE);
                 btStopListen.setVisibility(View.GONE);

@@ -1,9 +1,5 @@
 package com.example.chatapp.service;
 
-import static com.example.chatapp.activity.ToClientActivity.MSG_RECEIVE;
-import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CLOSE;
-import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CONNECT;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +10,7 @@ import android.os.IBinder;
 import android.os.Message;
 
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.Constant;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -94,8 +91,8 @@ public class ServerChatService extends Service {
             try {
                 listenThread = Thread.currentThread();
                 serverSocket = new ServerSocket(socketPort);
-                ChatAppLog.debug(""+serverSocket);
-                ChatAppLog.debug(""+listenThread);
+                ChatAppLog.debug("" + serverSocket);
+                ChatAppLog.debug("" + listenThread);
                 tpe = (ThreadPoolExecutor) threadPool;
                 ChatAppLog.debug("activityThread size :" + tpe.getActiveCount());
                 //这里会阻塞，直到有客户的连接
@@ -116,7 +113,7 @@ public class ServerChatService extends Service {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
                 bundle.putString("clientIp", clientIp);
-                message.what = MSG_SOCKET_CONNECT;
+                message.what = Constant.MSG_SOCKET_CONNECT;
                 message.setData(bundle);
                 mHandler.sendMessage(message);
 
@@ -150,7 +147,7 @@ public class ServerChatService extends Service {
                     Message message = new Message();
                     Bundle bundle = new Bundle();
                     bundle.putString("receiveMessage", receiverMessage);
-                    message.what = MSG_RECEIVE;
+                    message.what = Constant.MSG_RECEIVE;
                     message.setData(bundle);
                     mHandler.sendMessage(message);
                     ChatAppLog.debug("Server: Received: '" + receiverMessage + "'");
@@ -202,7 +199,7 @@ public class ServerChatService extends Service {
 
     public void stopListen() {
         try {
-            if (listenThread == null){
+            if (listenThread == null) {
                 return;
             }
             if (!listenThread.isInterrupted()) {

@@ -1,10 +1,5 @@
 package com.example.chatapp.service;
 
-import static com.example.chatapp.activity.ToClientActivity.MSG_RECEIVE;
-import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CLOSE;
-import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CONNECT;
-import static com.example.chatapp.activity.ToClientActivity.MSG_SOCKET_CONNECT_FAIL;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +10,7 @@ import android.os.IBinder;
 import android.os.Message;
 
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.Constant;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -106,7 +102,7 @@ public class ClientChatService extends Service {
                     //正常连接，开启消息接收线程
                     startReceiverMessage();
                     //回传消息给Activity，刷新聊天页面
-                    mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT);
+                    mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT);
                     //设置连接状态
                     socketConnectState = true;
                 }
@@ -115,7 +111,7 @@ public class ClientChatService extends Service {
                 //连接错误，关闭所有流和socket
                 closeConnection();
                 //回传消息给Activity，提示连接失败
-                mHandler.sendEmptyMessage(MSG_SOCKET_CONNECT_FAIL);
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
                 return;
             }
         });
@@ -164,10 +160,10 @@ public class ClientChatService extends Service {
                         if ("stop".equals(str)) {
                             ChatAppLog.debug();
                             //若接收到的是“stop”，表示是服务端终止了会话(好像是接收不到，service发不出来)
-                            message.what = MSG_SOCKET_CLOSE;
+                            message.what = Constant.MSG_SOCKET_CLOSE;
                         } else {
                             //其他的消息正常的显示
-                            message.what = MSG_RECEIVE;
+                            message.what = Constant.MSG_RECEIVE;
                         }
                         message.setData(bundle);
                         mHandler.sendMessage(message);
@@ -235,7 +231,7 @@ public class ClientChatService extends Service {
                 if (mSocket.isClosed()) {
                     closeConnection();
                     Message message = new Message();
-                    message.what = MSG_SOCKET_CLOSE;
+                    message.what = Constant.MSG_SOCKET_CLOSE;
                     mHandler.sendMessage(message);
                     break;
                 }
