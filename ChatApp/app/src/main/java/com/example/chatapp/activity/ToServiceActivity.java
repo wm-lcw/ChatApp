@@ -59,9 +59,6 @@ public class ToServiceActivity extends BasicActivity {
     private String inPutIp, inPutPort;
     private final int TCP_PORT = 3333;
     private boolean connectState = false;
-
-
-
     private ServerChatService serverChatService;
     private List<Msg> msgList = new ArrayList<>();
     private RecyclerView msgRecyclerView;
@@ -153,15 +150,24 @@ public class ToServiceActivity extends BasicActivity {
         });
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title initPopWindow
+     * @author wm
+     * @createTime 2023/3/2 18:40
+     * @description 创建长按消息弹出的弹框
+     */
     @SuppressLint("NewApi")
     private void initPopWindow(View v, int position, int messageType) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.item_popip, null, false);
         Button btnRevert = (Button) view.findViewById(R.id.btn_revert);
         Button btnDelete = (Button) view.findViewById(R.id.btn_delete);
         Button btnCopy = (Button) view.findViewById(R.id.btn_copy);
-        btnRevert.setPadding(0, 0, 0, 0);
-        btnDelete.setPadding(0, 0, 0, 0);
-        btnCopy.setPadding(0, 0, 0, 0);
+//        btnRevert.setPadding(0, 0, 0, 0);
+//        btnDelete.setPadding(0, 0, 0, 0);
+//        btnCopy.setPadding(0, 0, 0, 0);
         //构造一个PopupWindow，参数依次是加载的View，宽高，是否可获取焦点
         final PopupWindow popWindow = new PopupWindow(view,
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -197,12 +203,20 @@ public class ToServiceActivity extends BasicActivity {
             @Override
             public void onClick(View v) {
                 popWindow.dismiss();
-                if (v == btnRevert){
+                if (v == btnRevert) {
                     ChatAppLog.debug("revert");
-                } else if (v == btnDelete){
-                    ChatAppLog.debug("delete");
-                } else if (v == btnCopy){
+                    mHandler.sendEmptyMessage(Constant.MSG_SOCKET_REVERT_MESSAGE);
+                } else if (v == btnDelete) {
+                    ChatAppLog.debug("delete " + position);
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("deletePosition", position);
+                    message.setData(bundle);
+                    message.what = Constant.MSG_SOCKET_DELETE_MESSAGE;
+                    mHandler.sendMessage(message);
+                } else if (v == btnCopy) {
                     ChatAppLog.debug("copy");
+                    mHandler.sendEmptyMessage(Constant.MSG_SOCKET_COPY_MESSAGE);
                 }
             }
         };
@@ -211,8 +225,6 @@ public class ToServiceActivity extends BasicActivity {
         btnRevert.setOnClickListener(onClickListener);
         btnDelete.setOnClickListener(onClickListener);
         btnCopy.setOnClickListener(onClickListener);
-
-
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -227,6 +239,15 @@ public class ToServiceActivity extends BasicActivity {
         }
     };
 
+    /**
+     *  @version V1.0
+     *  @Title
+     *  @author wm
+     *  @createTime 2023/3/2 18:41
+     *  @description 监听各组件的点击事件
+     *  @param
+     *  @return
+     */
     View.OnClickListener mListen = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -318,6 +339,18 @@ public class ToServiceActivity extends BasicActivity {
                 btListen.setVisibility(View.VISIBLE);
                 btStopListen.setVisibility(View.GONE);
                 serverChatService.stopListen();
+            } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
+                showToash("撤回消息！");
+
+            } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
+                showToash("删除消息！");
+                int deletePosition = msg.getData().getInt("deletePosition");
+                msgList.remove(deletePosition);
+                adapter.notifyDataSetChanged();
+                adapter.notifyItemInserted(msgList.size() - 1);
+            } else if (msg.what == Constant.MSG_SOCKET_COPY_MESSAGE) {
+                showToash("复制消息！");
+
             }
         }
     };
