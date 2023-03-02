@@ -71,6 +71,27 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
             return true;
         }
 
+        /**
+         *  @version V1.0
+         *  @Title setVisibility
+         *  @author wm
+         *  @createTime 2023/3/2 19:11
+         *  @description 设置该Item是否可见
+         *  @param
+         *  @return 
+         */
+        public void setVisibility(boolean isVisible){
+            RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) itemView.getLayoutParams();
+            if (isVisible){
+                params.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+                params.width = LinearLayout.LayoutParams.MATCH_PARENT;
+            } else {
+                params.height = 0;
+                params.width = 0;
+            }
+            itemView.setLayoutParams(params);
+        }
+
     }
 
     public MsgAdapter(List<Msg> msgList) {
@@ -97,7 +118,8 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
             holder.leftLayout.setVisibility(View.GONE);
             holder.rightMsg.setText(msg.getContent());
         }
-
+        //设置该Item是否可见
+        holder.setVisibility(mMsgList.get(position).isVisible());
     }
 
     @Override

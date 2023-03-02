@@ -165,9 +165,7 @@ public class ToServiceActivity extends BasicActivity {
         Button btnRevert = (Button) view.findViewById(R.id.btn_revert);
         Button btnDelete = (Button) view.findViewById(R.id.btn_delete);
         Button btnCopy = (Button) view.findViewById(R.id.btn_copy);
-//        btnRevert.setPadding(0, 0, 0, 0);
-//        btnDelete.setPadding(0, 0, 0, 0);
-//        btnCopy.setPadding(0, 0, 0, 0);
+
         //构造一个PopupWindow，参数依次是加载的View，宽高，是否可获取焦点
         final PopupWindow popWindow = new PopupWindow(view,
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -205,7 +203,12 @@ public class ToServiceActivity extends BasicActivity {
                 popWindow.dismiss();
                 if (v == btnRevert) {
                     ChatAppLog.debug("revert");
-                    mHandler.sendEmptyMessage(Constant.MSG_SOCKET_REVERT_MESSAGE);
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("revertPosition", position);
+                    message.setData(bundle);
+                    message.what = Constant.MSG_SOCKET_REVERT_MESSAGE;
+                    mHandler.sendMessage(message);
                 } else if (v == btnDelete) {
                     ChatAppLog.debug("delete " + position);
                     Message message = new Message();
@@ -284,6 +287,7 @@ public class ToServiceActivity extends BasicActivity {
      * @return
      */
     final Handler mHandler = new Handler(Looper.myLooper()) {
+        @SuppressLint("NotifyDataSetChanged")
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
@@ -341,7 +345,10 @@ public class ToServiceActivity extends BasicActivity {
                 serverChatService.stopListen();
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
                 showToash("撤回消息！");
-
+                int revertPosition = msg.getData().getInt("revertPosition");
+                msgList.get(revertPosition).setVisible(false);
+                adapter.notifyDataSetChanged();
+                adapter.notifyItemInserted(msgList.size() - 1);
             } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
                 showToash("删除消息！");
                 int deletePosition = msg.getData().getInt("deletePosition");
