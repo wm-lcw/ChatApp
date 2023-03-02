@@ -35,8 +35,10 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
         TextView rightMsg;
         ImageView head1;
         ImageView head2;
+        //ViewHolder内创建一个OnRecyclerItemMessageLongListener对象
         private OnRecyclerItemMessageLongListener mOnItemInLong = null;
 
+        //创建ViewHolder对象时将全局的OnRecyclerItemMessageLongListener对象（也就是Activity传进来的那个）传进来
         public ViewHolder(View view, OnRecyclerItemMessageLongListener longListener) {
             super(view);
             this.mOnItemInLong = longListener;
@@ -46,6 +48,7 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
             rightMsg = view.findViewById(R.id.right_msg);
             head1 = view.findViewById(R.id.head_left);
             head2 = view.findViewById(R.id.head_right);
+            //对下面两个组件进行长按监听
             leftMsg.setOnLongClickListener(this);
             rightMsg.setOnLongClickListener(this);
         }
@@ -54,8 +57,15 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
         public boolean onLongClick(View view) {
             int position = getAdapterPosition();
             if (mOnItemInLong != null) {
+                //这里确保拿到的position是有效的
                 if (position != RecyclerView.NO_POSITION) {
-                    mOnItemInLong.onItemLongClick(view, position);
+                    int messageType = 0;
+                    //messageType 用于区分消息来源: 0-->发送的消息； 1-->接收的消息
+                    if (view == leftMsg){
+                        messageType = 1;
+                    }
+                    //回调onItemLongClick方法，该方法在Activity中实现
+                    mOnItemInLong.onItemLongClick(view, position, messageType);
                 }
             }
             return true;
@@ -106,7 +116,7 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
      * @return
      */
     public interface OnRecyclerItemMessageLongListener {
-        void onItemLongClick(View view, int position);
+        void onItemLongClick(View view, int position, int messageType);
     }
 
     /**
@@ -116,7 +126,7 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
      * @Title setOnItemLongClickListener
      * @author wm
      * @createTime 2023/3/2 16:09
-     * @description 在Activity端调用
+     * @description 在Activity端调用，Activity将OnRecyclerItemMessageLongListener对象传进来
      */
     public void setOnItemLongClickListener(OnRecyclerItemMessageLongListener listener) {
         this.mOnItemLong = listener;

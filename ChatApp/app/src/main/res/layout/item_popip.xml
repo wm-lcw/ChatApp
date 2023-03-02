@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <Button
+        android:id="@+id/btn_revert"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:text="撤回"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/btn_delete"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:text="删除"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/btn_copy"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:text="复制"
+        android:textSize="15sp" />
+
+
+</LinearLayout>

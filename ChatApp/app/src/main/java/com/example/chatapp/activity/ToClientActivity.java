@@ -125,8 +125,7 @@ public class ToClientActivity extends BasicActivity {
         msgRecyclerView.setAdapter(adapter);
         adapter.setOnItemLongClickListener(new MsgAdapter.OnRecyclerItemMessageLongListener() {
             @Override
-            public void onItemLongClick(View view, int position) {
-                showToash("longClick " + position);
+            public void onItemLongClick(View view, int position, int messageType) {
             }
         });
     }
