@@ -144,8 +144,14 @@ public class ToServiceActivity extends BasicActivity {
         msgRecyclerView.setLayoutManager(layoutManager);
         adapter = new MsgAdapter(msgList);
         msgRecyclerView.setAdapter(adapter);
+        adapter.setOnItemLongClickListener(new MsgAdapter.OnRecyclerItemMessageLongListener() {
+            @Override
+            public void onItemLongClick(View view, int position) {
+                showToash("longClick " + position);
+            }
+        });
     }
-
+    
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {

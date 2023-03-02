@@ -30,8 +30,10 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="10dp"
-                android:textColor="#fff"
-                android:textIsSelectable="true"/>
+                android:textColor="#fff"/>
+            <!--
+                这个属性可以设置长按文字复制等操作
+                android:textIsSelectable="true"-->
         </LinearLayout>
     </LinearLayout>
 
@@ -53,8 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="10dp"
-                android:textIsSelectable="true"/>
+                android:layout_margin="10dp"/>
 
         </LinearLayout>
 
