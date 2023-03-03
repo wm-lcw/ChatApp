@@ -38,6 +38,7 @@ import com.example.chatapp.utils.NetWorkUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @ClassName: ToServiceActivity
@@ -243,13 +244,13 @@ public class ToServiceActivity extends BasicActivity {
     };
 
     /**
-     *  @version V1.0
-     *  @Title
-     *  @author wm
-     *  @createTime 2023/3/2 18:41
-     *  @description 监听各组件的点击事件
-     *  @param
-     *  @return
+     * @version V1.0
+     * @Title
+     * @author wm
+     * @createTime 2023/3/2 18:41
+     * @description 监听各组件的点击事件
+     * @param
+     * @return
      */
     View.OnClickListener mListen = new View.OnClickListener() {
         @Override
@@ -308,7 +309,7 @@ public class ToServiceActivity extends BasicActivity {
                 //刷新聊天框的记录
                 Msg msg1 = new Msg(getInputMessage, Msg.TYPE_SEND);
                 msgList.add(msg1);
-                //当有新消息，刷新RecyclerVeiw的显示
+                //当有新消息，刷新RecyclerView的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
@@ -318,9 +319,23 @@ public class ToServiceActivity extends BasicActivity {
                 //收到客户端发送的消息
                 String receiverMessage = msg.getData().getString("receiveMessage").trim();
                 ChatAppLog.debug("receiveMessage " + receiverMessage);
-                Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
-                msgList.add(msg1);
-                //当有新消息，刷新RecyclerVeiw的显示
+                /**
+                 * 使用特殊字符+position的形式来组成撤回指令，对方撤回消息时，发送指令；
+                 * 接收到消息之后判断是撤回指令还是正常的消息，若是撤回指令，将position对应的消息隐藏（这个position必是对方发送的消息）
+                 * 若是正常信息，则添加到消息列表，显示出来
+                 * */
+                //检查是否是撤回指令
+                int checkResult = checkRevertActionFormat(receiverMessage);
+                ChatAppLog.debug("checkRevertActionFormat " + checkResult);
+                if (checkResult != -1) {
+                    //接收到的是撤回指令，对消息进行撤回操作
+                    hideMessage(checkResult);
+                    showToash("对方撤回了一条消息！");
+                } else {
+                    Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
+                    msgList.add(msg1);
+                }
+                //当有新消息，刷新RecyclerView的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
@@ -346,15 +361,14 @@ public class ToServiceActivity extends BasicActivity {
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
                 showToash("撤回消息！");
                 int revertPosition = msg.getData().getInt("revertPosition");
-                msgList.get(revertPosition).setVisible(false);
-                adapter.notifyDataSetChanged();
-                adapter.notifyItemInserted(msgList.size() - 1);
+                //在本机上隐藏撤回的消息
+                hideMessage(revertPosition);
+                //发送指令给对方，让对方隐藏该信息(信息由指令和撤回消息的下标组成)
+                serverChatService.sendMessageToClient(Constant.MSG__REVERT_MESSAGE_ACTION + ":" + revertPosition);
             } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
                 showToash("删除消息！");
                 int deletePosition = msg.getData().getInt("deletePosition");
-                msgList.remove(deletePosition);
-                adapter.notifyDataSetChanged();
-                adapter.notifyItemInserted(msgList.size() - 1);
+                hideMessage(deletePosition);
             } else if (msg.what == Constant.MSG_SOCKET_COPY_MESSAGE) {
                 showToash("复制消息！");
 
@@ -378,15 +392,6 @@ public class ToServiceActivity extends BasicActivity {
         return super.onTouchEvent(event);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        ChatAppLog.debug();
-        serverChatService.closeClient();
-        if (connection != null) {
-            unbindService(connection);
-        }
-    }
 
     /**
      * @param
@@ -403,6 +408,64 @@ public class ToServiceActivity extends BasicActivity {
             if (ToServiceActivity.this.getCurrentFocus().getWindowToken() != null) {
                 imm.hideSoftInputFromWindow(ToServiceActivity.this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
             }
+        }
+    }
+
+    /**
+     * @param hideMessagePosition ：消息的下标
+     * @return
+     * @version V1.0
+     * @Title hideMessage
+     * @author wm
+     * @createTime 2023/3/3 10:11
+     * @description 隐藏消息的操作：删除消息/撤回消息都需要隐藏
+     */
+    private boolean hideMessage(int hideMessagePosition) {
+        if (hideMessagePosition < 0 || hideMessagePosition >= msgList.size()) {
+            ChatAppLog.error("hideMessagePosition out of MsgList");
+            return false;
+        }
+        msgList.get(hideMessagePosition).setVisible(false);
+        adapter.notifyDataSetChanged();
+        adapter.notifyItemInserted(msgList.size() - 1);
+        return true;
+    }
+
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title checkRevertActionFormat
+     * @author wm
+     * @createTime 2023/3/3 11:31
+     * @description 检查是否是正确的撤回指令
+     */
+    private int checkRevertActionFormat(String revertMessage) {
+        String[] strings = revertMessage.split(":");
+        int revertPosition;
+        ChatAppLog.debug("string[].length " + strings.length);
+//        for (int i = 0; i < strings.length; i++){
+//            ChatAppLog.debug(i + ":" + strings[i]);
+//        }
+        if (strings.length == 2 && strings[0].startsWith(Constant.MSG__REVERT_MESSAGE_ACTION) && Pattern.matches(Constant.MATCH_POSITION_FORMAT_REGEX, strings[1])) {
+            //分割字符串只有指令跟下标，且下标在消息队列的范围内
+            revertPosition = Integer.parseInt(strings[1]);
+            ChatAppLog.debug("revertPosition " + revertPosition);
+            if (revertPosition >= 0 && revertPosition < msgList.size()) {
+                return revertPosition;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ChatAppLog.debug();
+        serverChatService.closeClient();
+        if (connection != null) {
+            unbindService(connection);
         }
     }
 
