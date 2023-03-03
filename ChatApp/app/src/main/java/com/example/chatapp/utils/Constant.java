@@ -68,4 +68,9 @@ public class Constant {
      * 匹配自然数的正则表达式，用于检查撤回的position是否符合下标的规范（自然数）
      */
     public static final String MATCH_POSITION_FORMAT_REGEX = "^(0|[1-9][0-9]*)$";
+
+    /**
+     * TCP通信的端口
+     */
+    public static final int TCP_PORT = 3333;
 }

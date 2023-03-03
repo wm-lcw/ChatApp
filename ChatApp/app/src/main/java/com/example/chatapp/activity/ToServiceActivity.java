@@ -60,7 +60,6 @@ public class ToServiceActivity extends BasicActivity {
     private RelativeLayout rlChatUi;
     private TextView tvServiceIp, tvChatIp;
     private String inPutIp, inPutPort;
-    private final int TCP_PORT = 3333;
     private boolean connectState = false;
     private ServerChatService serverChatService;
     private List<Msg> msgList = new ArrayList<>();
@@ -268,7 +267,7 @@ public class ToServiceActivity extends BasicActivity {
             if (view == btListen) {
                 ChatAppLog.debug("server " + serverChatService);
                 if (serverChatService != null) {
-                    serverChatService.startListen(TCP_PORT);
+                    serverChatService.startListen(Constant.TCP_PORT);
                 }
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_LISTING);
                 //点击开始监听按钮之后隐藏键盘
