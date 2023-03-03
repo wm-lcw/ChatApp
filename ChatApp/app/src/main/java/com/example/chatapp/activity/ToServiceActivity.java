@@ -4,6 +4,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -203,24 +205,14 @@ public class ToServiceActivity extends BasicActivity {
             public void onClick(View v) {
                 popWindow.dismiss();
                 if (v == btnRevert) {
-                    ChatAppLog.debug("revert");
-                    Message message = new Message();
-                    Bundle bundle = new Bundle();
-                    bundle.putInt("revertPosition", position);
-                    message.setData(bundle);
-                    message.what = Constant.MSG_SOCKET_REVERT_MESSAGE;
-                    mHandler.sendMessage(message);
+                    ChatAppLog.debug("revert " + position);
+                    sendLongClickMessage(Constant.MSG_SOCKET_REVERT_MESSAGE, "revertPosition", position);
                 } else if (v == btnDelete) {
                     ChatAppLog.debug("delete " + position);
-                    Message message = new Message();
-                    Bundle bundle = new Bundle();
-                    bundle.putInt("deletePosition", position);
-                    message.setData(bundle);
-                    message.what = Constant.MSG_SOCKET_DELETE_MESSAGE;
-                    mHandler.sendMessage(message);
+                    sendLongClickMessage(Constant.MSG_SOCKET_DELETE_MESSAGE, "deletePosition", position);
                 } else if (v == btnCopy) {
-                    ChatAppLog.debug("copy");
-                    mHandler.sendEmptyMessage(Constant.MSG_SOCKET_COPY_MESSAGE);
+                    ChatAppLog.debug("copy " + position);
+                    sendLongClickMessage(Constant.MSG_SOCKET_COPY_MESSAGE, "copyPosition", position);
                 }
             }
         };
@@ -229,6 +221,24 @@ public class ToServiceActivity extends BasicActivity {
         btnRevert.setOnClickListener(onClickListener);
         btnDelete.setOnClickListener(onClickListener);
         btnCopy.setOnClickListener(onClickListener);
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title sendLongClickMessage
+     * @author wm
+     * @createTime 2023/3/3 15:01
+     * @description 长按消息：撤回、删除、复制操作发送Message的操作
+     */
+    private void sendLongClickMessage(int messageType, String key, int position) {
+        Message message = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putInt(key, position);
+        message.setData(bundle);
+        message.what = messageType;
+        mHandler.sendMessage(message);
     }
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -370,8 +380,10 @@ public class ToServiceActivity extends BasicActivity {
                 int deletePosition = msg.getData().getInt("deletePosition");
                 hideMessage(deletePosition);
             } else if (msg.what == Constant.MSG_SOCKET_COPY_MESSAGE) {
-                showToash("复制消息！");
+                int copyPosition = msg.getData().getInt("copyPosition");
+                String copyMessage = msgList.get(copyPosition).getContent();
 
+                toCopyText(copyMessage);
             }
         }
     };
@@ -445,9 +457,6 @@ public class ToServiceActivity extends BasicActivity {
         String[] strings = revertMessage.split(":");
         int revertPosition;
         ChatAppLog.debug("string[].length " + strings.length);
-//        for (int i = 0; i < strings.length; i++){
-//            ChatAppLog.debug(i + ":" + strings[i]);
-//        }
         if (strings.length == 2 && strings[0].startsWith(Constant.MSG__REVERT_MESSAGE_ACTION) && Pattern.matches(Constant.MATCH_POSITION_FORMAT_REGEX, strings[1])) {
             //分割字符串只有指令跟下标，且下标在消息队列的范围内
             revertPosition = Integer.parseInt(strings[1]);
@@ -459,6 +468,25 @@ public class ToServiceActivity extends BasicActivity {
         return -1;
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title toCopyText
+     * @author wm
+     * @createTime 2023/3/3 14:55
+     * @description 复制文字
+     */
+    private void toCopyText(String copyText) {
+        ChatAppLog.debug(copyText);
+        //获取剪贴板管理器：
+        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        // 创建普通字符型ClipData
+        ClipData mClipData = ClipData.newPlainText("Label", copyText);
+        // 将ClipData内容放到系统剪贴板里
+        cm.setPrimaryClip(mClipData);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -468,6 +496,4 @@ public class ToServiceActivity extends BasicActivity {
             unbindService(connection);
         }
     }
-
-
 }
