@@ -8,6 +8,10 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
+import com.example.chatapp.utils.ChatAppLog;
 
 
 /**
@@ -96,9 +100,28 @@ public abstract class BasicActivity extends AppCompatActivity implements UiCallB
     /**
      * 消息提示
      */
-    protected void showToash(CharSequence charSequence) {
+    protected void showToast(CharSequence charSequence) {
         Toast.makeText(context, charSequence, Toast.LENGTH_SHORT).show();
     }
+
+
+    public void setFragment(Fragment firstFragment, int id, Fragment showFragment){
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.hide(firstFragment);
+        fragmentTransaction.add(id, showFragment).commit();
+        fragmentTransaction.show(showFragment);
+
+    }
+
+    public void removeFragment(Fragment fragment,Fragment showFragment){
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.remove(fragment);
+        fragmentTransaction.show(showFragment).commit();
+        ChatAppLog.debug();
+    }
+
+
 }
 
 

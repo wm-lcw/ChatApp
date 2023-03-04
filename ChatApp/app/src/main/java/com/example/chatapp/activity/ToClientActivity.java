@@ -26,6 +26,8 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,6 +35,7 @@ import com.example.chatapp.R;
 import com.example.chatapp.adapter.MsgAdapter;
 import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Msg;
+import com.example.chatapp.fragment.ClientFirstFragment;
 import com.example.chatapp.service.ClientChatService;
 import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.Constant;
@@ -76,6 +79,16 @@ public class ToClientActivity extends BasicActivity {
         //启动MusicPlayService服务
         Intent bindIntent = new Intent(ToClientActivity.this, ClientChatService.class);
         bindService(bindIntent, connection, BIND_AUTO_CREATE);
+        bindFragment();
+    }
+
+    private void bindFragment(){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        ClientFirstFragment clientFirstFragment = ClientFirstFragment.newInstance();
+        fragmentTransaction.add(R.id.client_fragment_container,clientFirstFragment).addToBackStack("");
+
+        fragmentTransaction.commit();
     }
 
     @Override
@@ -226,13 +239,13 @@ public class ToClientActivity extends BasicActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isConnect) {
-            llRequestUi.setVisibility(View.GONE);
-            rlChatUi.setVisibility(View.VISIBLE);
-        } else {
-            llRequestUi.setVisibility(View.VISIBLE);
-            rlChatUi.setVisibility(View.GONE);
-        }
+//        if (isConnect) {
+//            llRequestUi.setVisibility(View.GONE);
+//            rlChatUi.setVisibility(View.VISIBLE);
+//        } else {
+//            llRequestUi.setVisibility(View.VISIBLE);
+//            rlChatUi.setVisibility(View.GONE);
+//        }
     }
 
     View.OnClickListener mListen = new View.OnClickListener() {
@@ -243,7 +256,7 @@ public class ToClientActivity extends BasicActivity {
                 inPutPort = etPort.getText().toString().trim();
                 //暂时删除PORT端口的输入及判断，暂时写死为3333
                 if (inPutIp == null || "".equals(inPutIp)) {
-                    showToash("please check IP or PORT format !!!");
+                    showToast("please check IP or PORT format !!!");
                 } else {
                     TCP_IP = inPutIp;
 //                    TCP_PORT = Integer.parseInt(inPutPort);
@@ -293,7 +306,7 @@ public class ToClientActivity extends BasicActivity {
         public void handleMessage(Message msg) {
             if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
-                showToash("connect fail! check your IP and PORT!");
+                showToast("connect fail! check your IP and PORT!");
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;
@@ -330,7 +343,7 @@ public class ToClientActivity extends BasicActivity {
                 if (checkResult != -1) {
                     //接收到的是撤回指令，对消息进行撤回操作
                     hideMessage(checkResult);
-                    showToash("对方撤回了一条消息！");
+                    showToast("对方撤回了一条消息！");
                 } else {
                     Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
                     msgList.add(msg1);
@@ -341,20 +354,20 @@ public class ToClientActivity extends BasicActivity {
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
             } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
-                showToash("连接已断开，请重新连接！");
+                showToast("连接已断开，请重新连接！");
                 //收到服务端中断的信息
                 closeConnection();
                 llRequestUi.setVisibility(View.VISIBLE);
                 rlChatUi.setVisibility(View.GONE);
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
-                showToash("撤回消息！");
+                showToast("撤回消息！");
                 int revertPosition = msg.getData().getInt("revertPosition");
                 //在本机上隐藏撤回的消息
                 hideMessage(revertPosition);
                 //发送指令给对方，让对方隐藏该信息(信息由指令和撤回消息的下标组成)
                 clientChatService.sendMessageToService(Constant.MSG__REVERT_MESSAGE_ACTION + ":" + revertPosition);
             } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
-                showToash("删除消息！");
+                showToast("删除消息！");
                 int deletePosition = msg.getData().getInt("deletePosition");
                 hideMessage(deletePosition);
             } else if (msg.what == Constant.MSG_SOCKET_COPY_MESSAGE) {
