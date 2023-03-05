@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.ClientFirstFragment">
+    <LinearLayout
+        android:id="@+id/ll_service_listen_ui"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/ll_service_listing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_gravity="center"
+                android:id="@+id/tv_service_ip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="IP:192.168.42.65"/>
+
+            <Button
+                android:id="@+id/bt_service_listen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="start listen"/>
+            <Button
+                android:id="@+id/bt_service_cancel_listen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="cancel listen"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ListView
+                android:id="@+id/lv_service_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
+</FrameLayout>

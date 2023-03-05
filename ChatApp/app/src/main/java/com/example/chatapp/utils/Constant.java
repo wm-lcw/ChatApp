@@ -45,19 +45,24 @@ public class Constant {
     public static final int MSG_SOCKET_STOP_LISTING = 7;
 
     /**
+     * TCP服务端接收到新的客户链接
+     */
+    public static final int MSG_SOCKET_NEW_CLIENT = 8;
+
+    /**
      * 撤回消息
      */
-    public static final int MSG_SOCKET_REVERT_MESSAGE = 8;
+    public static final int MSG_SOCKET_REVERT_MESSAGE = 22;
 
     /**
      * 删除消息
      */
-    public static final int MSG_SOCKET_DELETE_MESSAGE = 9;
+    public static final int MSG_SOCKET_DELETE_MESSAGE = 23;
 
     /**
      * 复制
      */
-    public static final int MSG_SOCKET_COPY_MESSAGE = 10;
+    public static final int MSG_SOCKET_COPY_MESSAGE = 24;
 
     /**
      * 撤回消息的特殊字符
