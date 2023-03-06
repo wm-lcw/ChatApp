@@ -13,12 +13,8 @@ import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.Constant;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * @CreateDate: 2023/3/1
  * @UpdateUser: updater
  * @UpdateDate: 2023/3/1
- * @UpdateRemark: 更新内容
+ * @UpdateRemark: 重写服务端连接客户端的逻辑
  * @Version: 1.0
  */
 public class ServerChatService extends Service {
@@ -47,7 +43,6 @@ public class ServerChatService extends Service {
 
     private BufferedReader serverIn;
     private PrintWriter serverOut;
-    private ServerSocket serverSocket;
     /**
      * 创建线程池
      */
@@ -63,7 +58,6 @@ public class ServerChatService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -82,12 +76,21 @@ public class ServerChatService extends Service {
         }
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title connectSocket
+     * @author wm
+     * @createTime 2023/3/6 14:35
+     * @description 开始跟客户端连接
+     */
     public void connectSocket(Socket clientSocket, PrintWriter serverOut, BufferedReader serverIn) {
-        try{
+        try {
             this.client = clientSocket;
             this.serverOut = serverOut;
             this.serverIn = serverIn;
-            if (client == null){
+            if (client == null) {
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
                 return;
             }
@@ -100,7 +103,7 @@ public class ServerChatService extends Service {
 
             //客户连接成功之后发送消息给Activity
             mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT);
-        } catch (Exception e){
+        } catch (Exception e) {
             ChatAppLog.error(e.getMessage());
             mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
         }
@@ -108,49 +111,15 @@ public class ServerChatService extends Service {
 
     }
 
-    public void startListen(int port) {
-        if (client != null) {
-            return;
-        }
-        socketPort = port;
-        threadPool.execute(() -> {
-            try {
-                listenThread = Thread.currentThread();
-                serverSocket = new ServerSocket(socketPort);
-                ChatAppLog.debug("" + serverSocket);
-                ChatAppLog.debug("" + listenThread);
-                tpe = (ThreadPoolExecutor) threadPool;
-                ChatAppLog.debug("activityThread size :" + tpe.getActiveCount());
-                //这里会阻塞，直到有客户的连接
-                client = serverSocket.accept();
-                ChatAppLog.debug("" + client);
-
-                //获取服务端输入输出流
-                serverOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(client.getOutputStream())), true);
-                serverIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                ChatAppLog.debug("serverIn " + serverIn);
-                ChatAppLog.debug("serverOut " + serverOut);
-
-                //获取客户端IP地址
-                String clientIp = client.getInetAddress().toString();
-                ChatAppLog.debug(clientIp);
-
-                //客户连接成功之后发送消息给Activity
-                Message message = new Message();
-                Bundle bundle = new Bundle();
-                bundle.putString("clientIp", clientIp);
-                message.what = Constant.MSG_SOCKET_CONNECT;
-                message.setData(bundle);
-                mHandler.sendMessage(message);
-
-                //开启接收信息线程，用于接收客户端的消息
-                receiverMessageFromClient();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title receiverMessageFromClient
+     * @author wm
+     * @createTime 2023/3/6 14:34
+     * @description 接收客户端的消息
+     */
     public void receiverMessageFromClient() {
         threadPool.execute(() -> {
             try {
@@ -185,6 +154,15 @@ public class ServerChatService extends Service {
         });
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title sendMessageToClient
+     * @author wm
+     * @createTime 2023/3/6 14:34
+     * @description 发送信息给客户端
+     */
     public void sendMessageToClient(String message) {
         if (!"".equals(message)) {
             threadPool.execute(() -> {
@@ -214,25 +192,6 @@ public class ServerChatService extends Service {
             }
             if (client != null) {
                 client.close();
-            }
-            if (serverSocket != null) {
-                serverSocket.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void stopListen() {
-        try {
-            if (listenThread == null) {
-                return;
-            }
-            if (!listenThread.isInterrupted()) {
-                listenThread.interrupt();
-                serverSocket.close();
-                serverSocket = null;
             }
         } catch (IOException e) {
             e.printStackTrace();

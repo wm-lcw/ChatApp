@@ -150,9 +150,7 @@ public class ServerChatFragment extends BaseFragment {
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
+        public void onServiceDisconnected(ComponentName name) {}
     };
 
     /**
@@ -281,8 +279,6 @@ public class ServerChatFragment extends BaseFragment {
                     ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
                 }
             }
-
-
         }
     };
 

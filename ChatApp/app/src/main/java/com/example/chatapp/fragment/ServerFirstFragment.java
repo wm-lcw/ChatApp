@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,23 +26,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.chatapp.R;
-import com.example.chatapp.activity.ToServiceActivity;
 import com.example.chatapp.adapter.SocketAdapter;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
-import com.example.chatapp.bean.Msg;
 import com.example.chatapp.bean.SocketBean;
 import com.example.chatapp.service.ServerListenService;
 import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.Constant;
 import com.example.chatapp.utils.NetWorkUtils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,16 +106,20 @@ public class ServerFirstFragment extends BaseFragment {
     public void initViewData(View view) {
         super.initViewData(view);
         ChatAppLog.debug();
-        try {
-            Intent bindIntent = new Intent(getActivity(), ServerListenService.class);
-            mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
-            initSocketAdapter();
-        } catch (Exception e) {
-            ChatAppLog.error(e.getMessage());
-        }
-
+        Intent bindIntent = new Intent(getActivity(), ServerListenService.class);
+        mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
+        initSocketAdapter();
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title initSocketAdapter
+     * @author wm
+     * @createTime 2023/3/6 14:42
+     * @description 初始化并配置SocketAdapter
+     */
     private void initSocketAdapter() {
         socketAdapter = new SocketAdapter(mContext, socketBeanList);
         clientList.setAdapter(socketAdapter);
@@ -158,17 +153,10 @@ public class ServerFirstFragment extends BaseFragment {
         @Override
         public void onClick(View view) {
             if (view == btListen) {
-                ChatAppLog.debug("server " + serverListenService);
-                if (serverListenService != null) {
-                    serverListenService.startListen(Constant.TCP_PORT);
-                }
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_LISTING);
-
             } else if (view == btStopListen) {
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_STOP_LISTING);
             }
-
-
         }
     };
 
@@ -190,17 +178,19 @@ public class ServerFirstFragment extends BaseFragment {
                 ChatAppLog.debug("connect fail");
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("client connect success");
-                String clientIp = msg.getData().getString("clientIp").trim();
-
             } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
-
             } else if (msg.what == Constant.MSG_SOCKET_LISTING) {
+                ChatAppLog.debug("MSG_SOCKET_LISTING");
                 btListen.setVisibility(View.GONE);
                 btStopListen.setVisibility(View.VISIBLE);
                 String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
                 tvServiceIp.setText(ipMessage);
+                if (serverListenService != null) {
+                    serverListenService.startListen(Constant.TCP_PORT);
+                }
             } else if (msg.what == Constant.MSG_SOCKET_STOP_LISTING) {
+                ChatAppLog.debug("MSG_SOCKET_STOP_LISTING");
                 btListen.setVisibility(View.VISIBLE);
                 btStopListen.setVisibility(View.GONE);
                 serverListenService.stopListen();
