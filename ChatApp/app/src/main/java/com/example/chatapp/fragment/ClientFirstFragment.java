@@ -13,7 +13,9 @@ import android.widget.Button;
 import com.example.chatapp.R;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
+import com.example.chatapp.bean.Device;
 import com.example.chatapp.utils.ChatAppLog;
+import com.example.chatapp.utils.DeviceSearcher;
 
 /**
  * @ClassName: ClientFirstFragment
@@ -27,7 +29,7 @@ import com.example.chatapp.utils.ChatAppLog;
  */
 public class ClientFirstFragment extends BaseFragment {
 
-    private Button btnTest;
+    private Button btnTest, btnScanDevice;
     private Activity mActivity;
 
     private static ClientFirstFragment instance = new ClientFirstFragment();
@@ -65,6 +67,7 @@ public class ClientFirstFragment extends BaseFragment {
     public void findViewById(View view) {
         super.findViewById(view);
         btnTest = view.findViewById(R.id.btn_test);
+        btnScanDevice = view.findViewById(R.id.btn_scan_service);
     }
 
     @Override
@@ -80,6 +83,34 @@ public class ClientFirstFragment extends BaseFragment {
                 }
             }
         });
+
+        btnScanDevice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //开始查找设备
+                DeviceSearcher.search(onSearchDevice);
+            }
+        });
+    }
+
+    private OnSearchDevice onSearchDevice = new OnSearchDevice();
+
+    private class OnSearchDevice implements DeviceSearcher.OnSearchListener{
+
+        @Override
+        public void onSearchStart() {
+            ChatAppLog.debug("start search");
+        }
+
+        @Override
+        public void onSearchedNewOne(Device device) {
+            ChatAppLog.debug("find device " + device.getIp());
+        }
+
+        @Override
+        public void onSearchFinish() {
+            ChatAppLog.debug("stop search");
+        }
     }
 
 }

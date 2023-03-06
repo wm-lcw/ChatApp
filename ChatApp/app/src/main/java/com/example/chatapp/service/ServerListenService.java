@@ -12,6 +12,7 @@ import android.os.Parcelable;
 
 import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.Constant;
+import com.example.chatapp.utils.DeviceSearchResponser;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -98,10 +99,11 @@ public class ServerListenService extends Service {
         }
         try {
             serverSocket = new ServerSocket(port);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+        //开启设备查找反馈
+        DeviceSearchResponser.open();
         threadPool.execute(() -> {
             try {
 //                while(true){
@@ -150,6 +152,8 @@ public class ServerListenService extends Service {
         if (listenThread == null) {
             return;
         }
+        //关闭设备查找反馈
+        DeviceSearchResponser.close();
         if (!listenThread.isInterrupted()) {
             listenThread.interrupt();
         }
