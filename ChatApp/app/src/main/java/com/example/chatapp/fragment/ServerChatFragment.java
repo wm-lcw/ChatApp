@@ -132,7 +132,7 @@ public class ServerChatFragment extends BaseFragment {
     @Override
     public void initViewData(View view) {
         super.initViewData(view);
-        //启动MusicPlayService服务
+        //启动ServerChatService服务
         Intent bindIntent = new Intent(mActivity, ServerChatService.class);
         mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
         initAdapter();

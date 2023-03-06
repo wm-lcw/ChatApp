@@ -10,106 +10,10 @@
     android:fitsSystemWindows="true"
     android:background="@mipmap/ic_client_main">
 
-    <LinearLayout
-        android:id="@+id/ll_request_ui"
-        android:layout_marginTop="150dp"
-        android:layout_marginLeft="150dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-        <EditText
-            android:background="@drawable/et_ip_styles"
-            android:id="@+id/et_ip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:digits="0123456789."
-            android:hint="input service Ip"/>
-
-        <EditText
-            android:id="@+id/et_port"
-            android:layout_width="95dp"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="input port"
-            android:visibility="gone"/>
-
-        <Button
-            android:id="@+id/bt_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="connect"/>
-    </LinearLayout>
-
     <FrameLayout
         android:id="@+id/client_fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"/>
-
-
-    <RelativeLayout
-        android:id="@+id/rl_chat_ui"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <LinearLayout
-            android:id="@+id/ll_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_back"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="back" />
-
-            <TextView
-                android:id="@+id/tv_chat_ip"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Service IP"
-                android:textSize="16sp" />
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/msg_recycle_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/rl_input_view"
-            android:layout_below="@+id/ll_title"
-            android:layout_marginBottom="10dp" />
-
-        <RelativeLayout
-            android:id="@+id/rl_input_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true">
-
-            <EditText
-                android:id="@+id/et_input_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="10dp"
-                android:layout_toLeftOf="@+id/bt_send_message" />
-
-            <Button
-                android:id="@+id/bt_send_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="10dp"
-                android:text="send" />
-        </RelativeLayout>
-
-    </RelativeLayout>
-
 
 </LinearLayout>

@@ -112,7 +112,6 @@ public class ClientChatService extends Service {
                 closeConnection();
                 //回传消息给Activity，提示连接失败
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
-                return;
             }
         });
 

@@ -16,7 +16,6 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,14 +30,11 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chatapp.R;
-import com.example.chatapp.activity.ToClientActivity;
 import com.example.chatapp.adapter.MsgAdapter;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
@@ -62,15 +58,10 @@ import java.util.regex.Pattern;
  * @Version: 1.0
  */
 public class ClientChatFragment extends BaseFragment {
-
-    private Button btnClose;
     private Activity mActivity;
-
     private Context mContext;
     private EditText etInputMessage;
     private Button btSendMessage, btBack;
-    private LinearLayout llRequestUi;
-    private RelativeLayout rlChatUi;
     private TextView tvChatIp;
     private String TCP_IP;
     private ClientChatService clientChatService;
@@ -82,7 +73,7 @@ public class ClientChatFragment extends BaseFragment {
 
     public ClientChatFragment(String ip, String port) {
 //        TCP_IP = ip;
-        TCP_IP = "192.168.170.65";
+        TCP_IP = "192.168.168.65";
     }
 
 
@@ -109,23 +100,20 @@ public class ClientChatFragment extends BaseFragment {
     @Override
     public void findViewById(View view) {
         super.findViewById(view);
-        btnClose = view.findViewById(R.id.btn_close_chat);
-        llRequestUi = view.findViewById(R.id.ll_request_ui);
-        rlChatUi = view.findViewById(R.id.rl_chat_ui);
         etInputMessage = view.findViewById(R.id.et_input_message);
         btSendMessage = view.findViewById(R.id.bt_send_message);
         btSendMessage.setOnClickListener(mListen);
         btBack = view.findViewById(R.id.btn_close_chat);
-        tvChatIp = view.findViewById(R.id.tv_chat_ip);
         btBack.setOnClickListener(mListen);
         msgRecyclerView = view.findViewById(R.id.msg_recycle_view);
+        tvChatIp = view.findViewById(R.id.tv_chat_ip);
     }
 
     @Override
     public void initViewData(View view) {
         super.initViewData(view);
         initAdapter();
-        //启动MusicPlayService服务
+        //启动ClientChatService服务
         Intent bindIntent = new Intent(mActivity, ClientChatService.class);
         mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
     }
@@ -134,7 +122,7 @@ public class ClientChatFragment extends BaseFragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             clientChatService = ((ClientChatService.ClientBinder) service).getService(mContext, mHandler);
-            if (clientChatService != null ){
+            if (clientChatService != null) {
                 //获取到service对象之后直接开始连接
                 ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + Constant.TCP_PORT);
                 clientChatService.connectSocket(TCP_IP, Constant.TCP_PORT);
@@ -453,6 +441,5 @@ public class ClientChatFragment extends BaseFragment {
         ChatAppLog.debug("");
         clientChatService.closeConnection();
         isConnect = false;
-//        clientChatService.closeMonitorThread();
     }
 }
