@@ -40,7 +40,7 @@ public class ServerChatService extends Service {
 
     private Context mContext;
     private Handler mHandler;
-    private static Socket client;
+    private Socket client;
     private String ipAddress;
     private int socketPort;
     private boolean socketConnectState = false;
@@ -80,6 +80,32 @@ public class ServerChatService extends Service {
             mHandler = handler;
             return ServerChatService.this;
         }
+    }
+
+    public void connectSocket(Socket clientSocket, PrintWriter serverOut, BufferedReader serverIn) {
+        try{
+            this.client = clientSocket;
+            this.serverOut = serverOut;
+            this.serverIn = serverIn;
+            if (client == null){
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
+                return;
+            }
+            //获取客户端输入输出流
+            ChatAppLog.debug("serverIn " + serverIn);
+            ChatAppLog.debug("serverOut " + serverOut);
+
+            //开启接收信息线程，用于接收客户端的消息
+            receiverMessageFromClient();
+
+            //客户连接成功之后发送消息给Activity
+            mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT);
+        } catch (Exception e){
+            ChatAppLog.error(e.getMessage());
+            mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
+        }
+
+
     }
 
     public void startListen(int port) {
@@ -162,6 +188,7 @@ public class ServerChatService extends Service {
     public void sendMessageToClient(String message) {
         if (!"".equals(message)) {
             threadPool.execute(() -> {
+                ChatAppLog.debug("sendTest---" + message);
                 serverOut.println(message);
                 serverOut.flush();
             });

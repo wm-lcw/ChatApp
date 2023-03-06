@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragment.ClientChatFragment">
+    tools:context=".fragment.ServerChatFragment">
 
     <RelativeLayout
         android:id="@+id/rl_chat_ui"

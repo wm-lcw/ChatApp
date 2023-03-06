@@ -82,7 +82,7 @@ public class ClientChatFragment extends BaseFragment {
 
     public ClientChatFragment(String ip, String port) {
 //        TCP_IP = ip;
-        TCP_IP = "192.168.231.65";
+        TCP_IP = "192.168.170.65";
     }
 
 

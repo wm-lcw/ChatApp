@@ -24,9 +24,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,17 +38,24 @@ import com.example.chatapp.adapter.MsgAdapter;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Msg;
-import com.example.chatapp.service.ClientChatService;
+import com.example.chatapp.service.ServerChatService;
 import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.Constant;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * @ClassName: ClientChatFragment
- * @Description: 客户端聊天Fragment
+ * @ClassName: ServerChatFragment
+ * @Description: 服务端聊天Fragment
  * @Author: wm
  * @CreateDate: 2023/3/4
  * @UpdateUser: updater
@@ -60,28 +65,36 @@ import java.util.regex.Pattern;
  */
 public class ServerChatFragment extends BaseFragment {
 
-    private Button btnClose;
     private Activity mActivity;
-
     private Context mContext;
     private EditText etInputMessage;
     private Button btSendMessage, btBack;
-    private LinearLayout llRequestUi;
-    private RelativeLayout rlChatUi;
     private TextView tvChatIp;
     private String TCP_IP;
-    private ClientChatService clientChatService;
-
+    private boolean connectState = false;
+    private ServerChatService serverChatService;
     private List<Msg> msgList = new ArrayList<>();
     private RecyclerView msgRecyclerView;
     private MsgAdapter adapter;
     private boolean isConnect = false;
+    private Socket clientSocket;
+    private BufferedReader serverIn;
+    private PrintWriter serverOut;
 
-    public ServerChatFragment(String ip, String port) {
-//        TCP_IP = ip;
-        TCP_IP = "192.168.231.65";
+    public Socket getClientSocket() {
+        return clientSocket;
     }
 
+    public ServerChatFragment(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+        this.TCP_IP = clientSocket.getInetAddress().toString();
+        try {
+            this.serverOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+            this.serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,21 +112,19 @@ public class ServerChatFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        //这里接下来会执行findViewById和setViewData两个方法
+        //这里接下来会执行findViewById和initViewData两个方法
     }
 
 
     @Override
     public void findViewById(View view) {
         super.findViewById(view);
-        btnClose = view.findViewById(R.id.btn_close_chat);
-        llRequestUi = view.findViewById(R.id.ll_request_ui);
-        rlChatUi = view.findViewById(R.id.rl_chat_ui);
         etInputMessage = view.findViewById(R.id.et_input_message);
         btSendMessage = view.findViewById(R.id.bt_send_message);
         btSendMessage.setOnClickListener(mListen);
-        btBack = view.findViewById(R.id.btn_close_chat);
         tvChatIp = view.findViewById(R.id.tv_chat_ip);
+        tvChatIp.setText(TCP_IP);
+        btBack = view.findViewById(R.id.btn_close_chat);
         btBack.setOnClickListener(mListen);
         msgRecyclerView = view.findViewById(R.id.msg_recycle_view);
     }
@@ -121,20 +132,20 @@ public class ServerChatFragment extends BaseFragment {
     @Override
     public void initViewData(View view) {
         super.initViewData(view);
-        initAdapter();
         //启动MusicPlayService服务
-        Intent bindIntent = new Intent(mActivity, ClientChatService.class);
+        Intent bindIntent = new Intent(mActivity, ServerChatService.class);
         mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
+        initAdapter();
     }
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            clientChatService = ((ClientChatService.ClientBinder) service).getService(mContext, mHandler);
-            if (clientChatService != null ){
+            serverChatService = ((ServerChatService.ServerBinder) service).getService(mContext, mHandler);
+            if (serverChatService != null) {
                 //获取到service对象之后直接开始连接
-                ChatAppLog.debug("ip:" + TCP_IP + ";  port:" + Constant.TCP_PORT);
-                clientChatService.connectSocket(TCP_IP, Constant.TCP_PORT);
+                ChatAppLog.debug("clientSocket : " + clientSocket);
+                serverChatService.connectSocket(clientSocket, serverOut, serverIn);
             }
         }
 
@@ -267,7 +278,7 @@ public class ServerChatFragment extends BaseFragment {
                 ChatAppLog.debug("back");
                 closeConnection();
                 if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ClientFirstFragment.newInstance());
+                    ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
                 }
             }
 
@@ -308,6 +319,10 @@ public class ServerChatFragment extends BaseFragment {
             if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
                 Toast.makeText(mContext, "connect fail! check your IP and PORT!", Toast.LENGTH_SHORT).show();
+                //连接失败时返回上个界面
+                if (mActivity != null && mActivity instanceof BasicActivity) {
+                    ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
+                }
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;
@@ -315,20 +330,20 @@ public class ServerChatFragment extends BaseFragment {
             } else if (msg.what == Constant.MSG_SEND) {
                 String getInputMessage = etInputMessage.getText().toString().trim();
                 ChatAppLog.debug("sendMessage " + getInputMessage);
-                //发送消息给服务端
-                clientChatService.sendMessageToService(getInputMessage);
+                //发送消息给客户端
+                serverChatService.sendMessageToClient(getInputMessage);
                 //刷新聊天框的记录
                 Msg msg1 = new Msg(getInputMessage, Msg.TYPE_SEND);
                 msgList.add(msg1);
-                //当有新消息，刷新RecyclerVeiw的显示
+                //当有新消息，刷新RecyclerView的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
                 //清空输入框内容
                 etInputMessage.setText("");
             } else if (msg.what == Constant.MSG_RECEIVE) {
-                //收到服务端发送的消息
-                String receiverMessage = msg.getData().getString("receiverMessage").trim();
+                //收到客户端发送的消息
+                String receiverMessage = msg.getData().getString("receiveMessage").trim();
                 ChatAppLog.debug("receiveMessage " + receiverMessage);
                 /**
                  * 使用特殊字符+position的形式来组成撤回指令，对方撤回消息时，发送指令；
@@ -346,7 +361,7 @@ public class ServerChatFragment extends BaseFragment {
                     Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
                     msgList.add(msg1);
                 }
-                //当有新消息，刷新RecyclerVeiw的显示
+                //当有新消息，刷新RecyclerView的显示
                 adapter.notifyItemInserted(msgList.size() - 1);
                 //将RecyclerView定位到最后一行
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
@@ -361,7 +376,7 @@ public class ServerChatFragment extends BaseFragment {
                 //在本机上隐藏撤回的消息
                 hideMessage(revertPosition);
                 //发送指令给对方，让对方隐藏该信息(信息由指令和撤回消息的下标组成)
-                clientChatService.sendMessageToService(Constant.MSG__REVERT_MESSAGE_ACTION + ":" + revertPosition);
+                serverChatService.sendMessageToClient(Constant.MSG__REVERT_MESSAGE_ACTION + ":" + revertPosition);
             } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
                 Toast.makeText(mContext, "删除消息！", Toast.LENGTH_SHORT).show();
                 int deletePosition = msg.getData().getInt("deletePosition");
@@ -448,8 +463,15 @@ public class ServerChatFragment extends BaseFragment {
      */
     private void closeConnection() {
         ChatAppLog.debug("");
-        clientChatService.closeConnection();
+        serverChatService.closeClient();
         isConnect = false;
-//        clientChatService.closeMonitorThread();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (connection != null) {
+            connection = null;
+        }
     }
 }

@@ -43,7 +43,6 @@ public class ServerListenService extends Service {
     private Handler mHandler;
     private ServerSocket serverSocket;
     private static Socket client;
-
     private boolean isListing = false;
 
 
@@ -97,23 +96,27 @@ public class ServerListenService extends Service {
             ChatAppLog.debug("Server is listing...");
             return;
         }
+        try {
+            serverSocket = new ServerSocket(port);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         threadPool.execute(() -> {
             try {
-                while(true){
+//                while(true){
                     isListing = true;
                     listenThread = Thread.currentThread();
-                    serverSocket = new ServerSocket(port);
                     ChatAppLog.debug("" + serverSocket);
                     ChatAppLog.debug("" + listenThread);
                     tpe = (ThreadPoolExecutor) threadPool;
-                    ChatAppLog.debug("activityThread size :" + tpe.getActiveCount());
                     //这里会阻塞，直到有客户的连接
                     client = serverSocket.accept();
                     ChatAppLog.debug("" + client);
                     Message msg = new Message();
                     msg.what = Constant.MSG_SOCKET_NEW_CLIENT;
                     mHandler.sendMessage(msg);
-                }
+//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -143,6 +146,7 @@ public class ServerListenService extends Service {
      *  @return 
      */
     public void stopListen() {
+        ChatAppLog.debug();
         if (listenThread == null) {
             return;
         }
@@ -167,6 +171,7 @@ public class ServerListenService extends Service {
             }
             if (!listenThread.isInterrupted()) {
                 listenThread.interrupt();
+                client.close();
                 serverSocket.close();
                 serverSocket = null;
             }
