@@ -107,7 +107,7 @@ public class ClientFirstFragment extends BaseFragment {
     private void initAdapter() {
 //        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
 //        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
-//        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
+        deviceList.add(new Device("192.168.125.65", 3333, "uuid"));
         deviceAdapter = new DeviceAdapter(mContext, deviceList);
         lvServiceList.setAdapter(deviceAdapter);
         lvServiceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {

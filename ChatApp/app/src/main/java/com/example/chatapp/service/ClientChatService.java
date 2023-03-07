@@ -150,26 +150,41 @@ public class ClientChatService extends Service {
             ChatAppLog.debug();
             try {
                 while (true) {
-                    String str = mClientIn.readLine();
-                    if (str != null && !"".equals(str)) {
-                        //接收到服务端的消息，发送到Activity，更新到聊天框中
-                        Message message = new Message();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("receiverMessage", str);
-                        if ("stop".equals(str)) {
-                            ChatAppLog.debug();
-                            //若接收到的是“stop”，表示是服务端终止了会话(好像是接收不到，service发不出来)
-                            message.what = Constant.MSG_SOCKET_CLOSE;
-                        } else {
-                            //其他的消息正常的显示
-                            message.what = Constant.MSG_RECEIVE;
-                        }
-                        message.setData(bundle);
-                        mHandler.sendMessage(message);
+                    String str = "";
+                    /**
+                     * 使用这种方法会一直在读空内容，result都是0，只有内容不为空时才显示到屏幕上
+                     * */
+//                    byte[] inputData = new byte[1024];
+//                    int result = mSocket.getInputStream().read(inputData, 0, mSocket.getInputStream().available());
+//                    ChatAppLog.debug("receive " + result);
+//                    if (result > 0){
+//                        str = new String(inputData);
+//                        ChatAppLog.debug(str);
+//                    }
+
+                    str = mClientIn.readLine();
+                    if (str == null || "".equals(str)) {
+                        mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
+                        break;
                     }
+
+                    if ("stop".equals(str)) {
+                        ChatAppLog.debug("receive stop");
+                        //若接收到的是“stop”，表示是服务端终止了会话
+                        mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
+                        break;
+                    }
+                    //接收到服务端的消息，发送到Activity，更新到聊天框中
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putString("receiverMessage", str);
+                    message.what = Constant.MSG_RECEIVE;
+                    message.setData(bundle);
+                    mHandler.sendMessage(message);
                 }
             } catch (Exception e) {
                 ChatAppLog.error(e.toString());
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
             }
         });
     }
@@ -185,10 +200,8 @@ public class ClientChatService extends Service {
      */
     public void closeConnection() {
         try {
-            if (mSocket == null || mSocket.isClosed()){
-                //加上判断，若socket还没初始化或已断开，就不再重复执行以下操作
-                return;
-            }
+            //设置连接状态
+            socketConnectState = false;
             //只要关闭一个流，socket就会被关闭
             ChatAppLog.debug("isClose : " + mSocket.isClosed());
             if (mClientOut != null) {
@@ -200,15 +213,17 @@ public class ClientChatService extends Service {
                 mClientIn.close(); //关闭输入流
                 mClientIn = null;
             }
+            if (mSocket == null || mSocket.isClosed()) {
+                //加上判断，若socket还没初始化或已断开，就不再重复执行以下操作
+                mSocket = null;
+                return;
+            }
             if (mSocket != null) {
                 mSocket.close();  //关闭socket
-                mSocket.shutdownOutput();
                 mSocket = null;
             }
-            //设置连接状态
-            socketConnectState = false;
         } catch (IOException e) {
-            e.printStackTrace();
+            ChatAppLog.error(e.getMessage());
         }
 
     }

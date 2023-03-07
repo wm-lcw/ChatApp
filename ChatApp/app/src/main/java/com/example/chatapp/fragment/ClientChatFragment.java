@@ -258,9 +258,7 @@ public class ClientChatFragment extends BaseFragment {
             } else if (view == btBack) {
                 ChatAppLog.debug("back");
                 closeConnection();
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ((BasicActivity) mActivity).removeFragment(ClientChatFragment.this, ClientFirstFragment.newInstance());
-                }
+                backToFirstFragment();
             }
 
 
@@ -301,9 +299,7 @@ public class ClientChatFragment extends BaseFragment {
                 ChatAppLog.debug("connect fail");
                 Toast.makeText(mContext, "connect fail! check your IP and PORT!", Toast.LENGTH_SHORT).show();
                 //连接失败时返回主页
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ((BasicActivity) mActivity).removeFragment(ClientChatFragment.this, ClientFirstFragment.newInstance());
-                }
+                backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;
@@ -351,6 +347,8 @@ public class ClientChatFragment extends BaseFragment {
                 Toast.makeText(mContext, "连接已断开，请重新连接！", Toast.LENGTH_SHORT).show();
                 //收到服务端中断的信息
                 closeConnection();
+                //返回主页
+                backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
                 Toast.makeText(mContext, "撤回消息！", Toast.LENGTH_SHORT).show();
                 int revertPosition = msg.getData().getInt("revertPosition");
@@ -446,5 +444,20 @@ public class ClientChatFragment extends BaseFragment {
         ChatAppLog.debug("");
         clientChatService.closeConnection();
         isConnect = false;
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title backToFirstFragment
+     * @author wm
+     * @createTime 2023/3/7 16:27
+     * @description 返回主页的Fragment
+     */
+    private void backToFirstFragment() {
+        if (mActivity != null && mActivity instanceof BasicActivity) {
+            ((BasicActivity) mActivity).removeFragment(ClientChatFragment.this, ClientFirstFragment.newInstance());
+        }
     }
 }
