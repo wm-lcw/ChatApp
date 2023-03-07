@@ -185,8 +185,8 @@ public class ClientChatService extends Service {
      */
     public void closeConnection() {
         try {
-            if (mSocket.isClosed()){
-                //加上判断，若socket已断开，就不再重复执行以下操作
+            if (mSocket == null || mSocket.isClosed()){
+                //加上判断，若socket还没初始化或已断开，就不再重复执行以下操作
                 return;
             }
             //只要关闭一个流，socket就会被关闭

@@ -72,8 +72,9 @@ public class ClientChatFragment extends BaseFragment {
     private boolean isConnect = false;
 
     public ClientChatFragment(String ip, String port) {
-//        TCP_IP = ip;
-        TCP_IP = "192.168.168.65";
+        ChatAppLog.debug(ip);
+        TCP_IP = ip;
+//        TCP_IP = "192.168.168.65";
     }
 
 
@@ -299,6 +300,10 @@ public class ClientChatFragment extends BaseFragment {
             if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
                 Toast.makeText(mContext, "connect fail! check your IP and PORT!", Toast.LENGTH_SHORT).show();
+                //连接失败时返回主页
+                if (mActivity != null && mActivity instanceof BasicActivity) {
+                    ((BasicActivity) mActivity).removeFragment(ClientChatFragment.this, ClientFirstFragment.newInstance());
+                }
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;

@@ -8,14 +8,19 @@ import androidx.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
-
+import android.widget.ListView;
 import com.example.chatapp.R;
+import com.example.chatapp.adapter.DeviceAdapter;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
 import com.example.chatapp.bean.Device;
 import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.DeviceSearcher;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @ClassName: ClientFirstFragment
@@ -29,8 +34,12 @@ import com.example.chatapp.utils.DeviceSearcher;
  */
 public class ClientFirstFragment extends BaseFragment {
 
-    private Button btnTest, btnScanDevice;
+    private Context mContext;
     private Activity mActivity;
+    private Button btnScanDevice;
+    private List<Device> deviceList = new ArrayList<>();
+    private DeviceAdapter deviceAdapter;
+    private ListView lvServiceList;
 
     private static ClientFirstFragment instance = new ClientFirstFragment();
 
@@ -47,7 +56,8 @@ public class ClientFirstFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mActivity = getActivity();
+        mContext = getActivity();
     }
 
     @Override
@@ -60,29 +70,20 @@ public class ClientFirstFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mActivity = getActivity();
+
     }
 
     @Override
     public void findViewById(View view) {
         super.findViewById(view);
-        btnTest = view.findViewById(R.id.btn_test);
         btnScanDevice = view.findViewById(R.id.btn_scan_service);
+        lvServiceList = view.findViewById(R.id.lv_service_list);
+
     }
 
     @Override
     public void initViewData(View view) {
         super.initViewData(view);
-        btnTest.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ClientChatFragment clientChatFragment = new ClientChatFragment("", "");
-                    ((BasicActivity) mActivity).setFragment(ClientFirstFragment.this, R.id.client_fragment_container, clientChatFragment);
-                }
-            }
-        });
 
         btnScanDevice.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,11 +92,40 @@ public class ClientFirstFragment extends BaseFragment {
                 DeviceSearcher.search(onSearchDevice);
             }
         });
+        initAdapter();
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title initAdapter
+     * @author wm
+     * @createTime 2023/3/7 11:07
+     * @description 初始化Service设备列表的Adapter
+     */
+    private void initAdapter() {
+//        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
+//        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
+//        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
+        deviceAdapter = new DeviceAdapter(mContext, deviceList);
+        lvServiceList.setAdapter(deviceAdapter);
+        lvServiceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String ip = deviceList.get(position).getIp();
+                int port = deviceList.get(position).getPort();
+                if (mActivity != null && mActivity instanceof BasicActivity) {
+                    ClientChatFragment clientChatFragment = new ClientChatFragment(ip, "");
+                    ((BasicActivity) mActivity).setFragment(ClientFirstFragment.this, R.id.client_fragment_container, clientChatFragment);
+                }
+            }
+        });
     }
 
     private OnSearchDevice onSearchDevice = new OnSearchDevice();
 
-    private class OnSearchDevice implements DeviceSearcher.OnSearchListener{
+    private class OnSearchDevice implements DeviceSearcher.OnSearchListener {
 
         @Override
         public void onSearchStart() {
@@ -105,6 +135,8 @@ public class ClientFirstFragment extends BaseFragment {
         @Override
         public void onSearchedNewOne(Device device) {
             ChatAppLog.debug("find device " + device.getIp());
+            deviceList.add(device);
+            deviceAdapter.notifyDataSetChanged();
         }
 
         @Override
