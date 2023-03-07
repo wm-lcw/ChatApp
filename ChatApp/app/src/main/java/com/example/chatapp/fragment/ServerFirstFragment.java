@@ -106,6 +106,10 @@ public class ServerFirstFragment extends BaseFragment {
     public void initViewData(View view) {
         super.initViewData(view);
         ChatAppLog.debug();
+
+        String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
+        tvServiceIp.setText(ipMessage);
+
         Intent bindIntent = new Intent(getActivity(), ServerListenService.class);
         mContext.bindService(bindIntent, connection, BIND_AUTO_CREATE);
         initSocketAdapter();
@@ -121,6 +125,10 @@ public class ServerFirstFragment extends BaseFragment {
      * @description 初始化并配置SocketAdapter
      */
     private void initSocketAdapter() {
+//        Socket testSocket = new Socket();
+//        socketBeanList.add(new SocketBean(testSocket,"192.168.x.x"));
+//        socketBeanList.add(new SocketBean(testSocket,"192.168.x.x"));
+//        socketBeanList.add(new SocketBean(testSocket,"192.168.x.x"));
         socketAdapter = new SocketAdapter(mContext, socketBeanList);
         clientList.setAdapter(socketAdapter);
         //对列表中的客户端做点击监听处理
@@ -184,8 +192,7 @@ public class ServerFirstFragment extends BaseFragment {
                 ChatAppLog.debug("MSG_SOCKET_LISTING");
                 btListen.setVisibility(View.GONE);
                 btStopListen.setVisibility(View.VISIBLE);
-                String ipMessage = "WiFi Ip: " + NetWorkUtils.getLocalIPAddress(mContext) + "\nHotspot Ip: " + NetWorkUtils.getHostIp();
-                tvServiceIp.setText(ipMessage);
+
                 if (serverListenService != null) {
                     serverListenService.startListen(Constant.TCP_PORT);
                 }
