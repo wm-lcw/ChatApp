@@ -4,6 +4,12 @@ import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
 
+import com.example.chatapp.bean.Device;
+import com.example.chatapp.bean.SocketBean;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * @author wm
@@ -17,6 +23,9 @@ public class BasicApplication extends Application {
     private static ActivityManager activityManager;
     private static BasicApplication application;
     private static Context context;
+
+    private List<Device> deviceList = new ArrayList<>();
+    private List<SocketBean> socketBeanList = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -49,6 +58,22 @@ public class BasicApplication extends Application {
 
     public static BasicApplication getApplication() {
         return application;
+    }
+
+    public List<Device> getDeviceList() {
+        return deviceList;
+    }
+
+    public void setDeviceList(List<Device> deviceList) {
+        this.deviceList = deviceList;
+    }
+
+    public List<SocketBean> getSocketBeanList() {
+        return socketBeanList;
+    }
+
+    public void setSocketBeanList(List<SocketBean> socketBeanList) {
+        this.socketBeanList = socketBeanList;
     }
 }
 

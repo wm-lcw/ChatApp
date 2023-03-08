@@ -184,8 +184,9 @@ public class ServerChatService extends Service {
             if (serverIn != null) {
                 //客户端socket 已经关闭的情况，服务器端socket 调用shutdownOutput/shutdownInput 则会出现这个错误
                 //java.io.IOException: shutdown failed: ENOTCONN (Transport endpoint is not connected)
-//                client.shutdownOutput();
-//                client.shutdownInput();
+                //但是如果服务端主动关闭时不调用这个shutdown，会阻塞（后期研究）
+                client.shutdownOutput();
+                client.shutdownInput();
                 serverIn.close();
                 serverIn = null;
             }

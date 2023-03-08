@@ -53,15 +53,18 @@ public class SocketAdapter extends BaseAdapter {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.socket_item,null);
             viewHolder = new ViewHolder();
             viewHolder.tvSocketIp = convertView.findViewById(R.id.tv_socket_ip);
+            viewHolder.tvClientEnable = convertView.findViewById(R.id.tv_client_enable);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         viewHolder.tvSocketIp.setText(socketBeanList.get(position).getIp());
+        viewHolder.tvClientEnable.setText(socketBeanList.get(position).isSocketEnable() ? "online" : "offline");
         return convertView;
     }
 
     static class ViewHolder {
         TextView tvSocketIp;
+        TextView tvClientEnable;
     }
 }

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -84,5 +85,10 @@ public class NetWorkUtils {
         }
         return "0.0.0.0";
 
+    }
+
+    public String getDeviceUuid(){
+        byte[] uuid = (Build.PRODUCT + Build.ID).getBytes();
+        return new String(uuid);
     }
 }

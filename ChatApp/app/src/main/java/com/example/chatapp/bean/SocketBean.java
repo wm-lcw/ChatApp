@@ -15,10 +15,15 @@ import java.net.Socket;
 public class SocketBean {
     private Socket socket;
     private String ip;
+    private boolean socketEnable;
 
-    public SocketBean(Socket socket, String ip) {
+    public SocketBean() {
+    }
+
+    public SocketBean(Socket socket, String ip, boolean socketEnable) {
         this.socket = socket;
         this.ip = ip;
+        this.socketEnable = socketEnable;
     }
 
     public Socket getSocket() {
@@ -35,5 +40,13 @@ public class SocketBean {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public boolean isSocketEnable() {
+        return socketEnable;
+    }
+
+    public void setSocketEnable(boolean socketEnable) {
+        this.socketEnable = socketEnable;
     }
 }

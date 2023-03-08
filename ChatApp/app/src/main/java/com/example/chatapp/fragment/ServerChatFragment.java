@@ -43,7 +43,6 @@ import com.example.chatapp.utils.Constant;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -79,24 +78,21 @@ public class ServerChatFragment extends BaseFragment {
     private Socket clientSocket;
     private BufferedReader serverIn;
     private PrintWriter serverOut;
+    private RefreshClientListListener refreshClientListListener;
 
-    public Socket getClientSocket() {
-        return clientSocket;
-    }
-
-    public ServerChatFragment(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-        this.TCP_IP = clientSocket.getInetAddress().toString();
+    public ServerChatFragment(Socket socket) {
         try {
-            if (clientSocket != null && !clientSocket.isClosed()){
+            this.clientSocket = socket;
+            this.TCP_IP = clientSocket.getInetAddress().toString();
+            if (clientSocket != null && !clientSocket.isClosed()) {
                 this.serverOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
                 this.serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            } else{
+            } else {
                 this.serverOut = null;
                 this.serverIn = null;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            ChatAppLog.error(e.getMessage());
         }
     }
 
@@ -460,7 +456,7 @@ public class ServerChatFragment extends BaseFragment {
      */
     private void closeConnection() {
         ChatAppLog.debug("");
-        if (serverChatService != null){
+        if (serverChatService != null) {
             serverChatService.closeClient();
         }
         isConnect = false;
@@ -484,8 +480,37 @@ public class ServerChatFragment extends BaseFragment {
      * @description 返回主页的Fragment
      */
     private void backToFirstFragment() {
+        if (clientSocket != null) {
+            refreshClientListListener.refreshList(false);
+        }
         if (mActivity != null && mActivity instanceof BasicActivity) {
             ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
         }
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title setRefreshCallBack
+     * @author wm
+     * @createTime 2023/3/8 19:25
+     * @description 设置回调入口
+     */
+    public void setRefreshCallBack(RefreshClientListListener refreshCallBack) {
+        this.refreshClientListListener = refreshCallBack;
+    }
+
+    /**
+     *  @version V1.0
+     *  @Title
+     *  @author wm
+     *  @createTime 2023/3/8 19:26
+     *  @description 回调接口，用于更新 ServerFirstFragment里面client列表的可用状态
+     *  @param 
+     *  @return 
+     */
+    public static interface RefreshClientListListener {
+        void refreshList(boolean enable);
     }
 }

@@ -28,6 +28,7 @@ import com.example.chatapp.R;
 import com.example.chatapp.adapter.SocketAdapter;
 import com.example.chatapp.base.BaseFragment;
 import com.example.chatapp.base.BasicActivity;
+import com.example.chatapp.base.BasicApplication;
 import com.example.chatapp.bean.SocketBean;
 import com.example.chatapp.service.ServerListenService;
 import com.example.chatapp.utils.ChatAppLog;
@@ -35,7 +36,6 @@ import com.example.chatapp.utils.Constant;
 import com.example.chatapp.utils.NetWorkUtils;
 
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,15 +57,16 @@ public class ServerFirstFragment extends BaseFragment {
     private Button btListen, btStopListen;
     private TextView tvServiceIp;
     private ListView clientList;
-    private List<SocketBean> socketBeanList = new ArrayList<>();
+    private List<SocketBean> socketBeanList;
     private SocketAdapter socketAdapter;
     private ServerListenService serverListenService;
     /**
      * clientMap用于筛选重复连接的客户，使用IP作为key，Socket作为value
-     * */
+     */
     private final Map<String, Socket> clientMap = new HashMap<>();
 
     private static ServerFirstFragment instance = new ServerFirstFragment();
+    private int currentPosition = 0;
 
     public static ServerFirstFragment newInstance() {
         ChatAppLog.debug("" + instance);
@@ -80,6 +81,9 @@ public class ServerFirstFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
         mActivity = getActivity();
         mContext = getActivity();
+        socketBeanList = BasicApplication.getApplication().getSocketBeanList();
+
+        //fragment里面的onResume,onPause这些方法,只有在他依赖的activity进入相应的生命周期的时候才会调用的．fragment之间的切换是不会调用的
     }
 
     @Override
@@ -140,12 +144,18 @@ public class ServerFirstFragment extends BaseFragment {
         clientList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                showToast("选中客户为" + socketBeanList.get(position).getIp());
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    Socket client = socketBeanList.get(position).getSocket();
-                    ServerChatFragment serverChatFragment = new ServerChatFragment(client);
-                    ((BasicActivity) mActivity).setFragment(ServerFirstFragment.this, R.id.server_fragment_container, serverChatFragment);
+                if (socketBeanList.get(position).isSocketEnable()){
+                    showToast("选中客户为" + socketBeanList.get(position).getIp());
+                    if (mActivity != null && mActivity instanceof BasicActivity) {
+                        ServerChatFragment serverChatFragment = new ServerChatFragment(socketBeanList.get(position).getSocket());
+                        currentPosition = position;
+                        ((BasicActivity) mActivity).setFragment(ServerFirstFragment.this, R.id.server_fragment_container, serverChatFragment);
+                        serverChatFragment.setRefreshCallBack(new RefreshClientListCallBack());
+                    }
+                } else {
+                    showToast("该客户已离线！");
                 }
+
             }
         });
     }
@@ -214,11 +224,10 @@ public class ServerFirstFragment extends BaseFragment {
                 if (!clientMap.containsKey(newClientIp)) {
                     //有客户端连接，将客户socket保存到clientMap和socketBeanList中
                     clientMap.put(newClientIp, client);
-                    socketBeanList.add(new SocketBean(client, newClientIp));
+                    socketBeanList.add(new SocketBean(client, newClientIp, !client.isClosed()));
                     socketAdapter.notifyDataSetChanged();
                     showToast("客户: " + newClientIp + "请求连接！");
                 }
-
             }
         }
     };
@@ -230,4 +239,23 @@ public class ServerFirstFragment extends BaseFragment {
             mContext.unbindService(connection);
         }
     }
+
+    /**
+     * @param
+     * @author wm
+     * @version V1.0
+     * @Title
+     * @createTime 2023/3/8 19:27
+     * @description 实现回调接口，更新客户列表的可用状态
+     * @return
+     */
+    private class RefreshClientListCallBack implements ServerChatFragment.RefreshClientListListener {
+        @Override
+        public void refreshList(boolean enable) {
+            ChatAppLog.debug();
+            socketBeanList.get(currentPosition).setSocketEnable(enable);
+            socketAdapter.notifyDataSetChanged();
+        }
+    }
+
 }
