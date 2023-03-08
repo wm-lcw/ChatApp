@@ -1,15 +1,17 @@
 package com.example.chatapp.adapter;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chatapp.R;
 import com.example.chatapp.bean.SocketBean;
+import com.example.chatapp.utils.ChatAppLog;
 
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class SocketAdapter extends BaseAdapter {
 
     private Context mContext;
     private List<SocketBean> socketBeanList;
+    private int onlineTextColor, offlineTextColor;
 
     public SocketAdapter(Context context, List<SocketBean> list){
         mContext = context;
@@ -60,6 +63,24 @@ public class SocketAdapter extends BaseAdapter {
         }
         viewHolder.tvSocketIp.setText(socketBeanList.get(position).getIp());
         viewHolder.tvClientEnable.setText(socketBeanList.get(position).isSocketEnable() ? "online" : "offline");
+
+        /**
+         *  onlineTextColor = mContext.getResources().getColor(R.color.online);
+         *  onlineTextColor = mContext.getResources().getColor(R.color.offline);
+         *  viewHolder.tvSocketIp.setTextColor(onlineTextColor);
+         *  这个方法设置颜色不起作用，需要用下面的方法
+         */
+
+        //根据客户当前的状态来设定字体颜色
+        if (socketBeanList.get(position).isSocketEnable()){
+            ChatAppLog.debug("isSocketEnable");
+            viewHolder.tvClientEnable.setTextColor(Color.parseColor("#018786"));
+            viewHolder.tvSocketIp.setTextColor(Color.parseColor("#018786"));
+        } else {
+            ChatAppLog.debug("disable");
+            viewHolder.tvClientEnable.setTextColor(Color.parseColor("#6B6464"));
+            viewHolder.tvSocketIp.setTextColor(Color.parseColor("#6B6464"));
+        }
         return convertView;
     }
 
