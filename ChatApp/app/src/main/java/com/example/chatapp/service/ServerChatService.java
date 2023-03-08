@@ -90,7 +90,7 @@ public class ServerChatService extends Service {
             this.client = clientSocket;
             this.serverOut = serverOut;
             this.serverIn = serverIn;
-            if (client == null) {
+            if (client == null || serverOut == null || serverIn == null) {
                 mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CONNECT_FAIL);
                 return;
             }
@@ -128,7 +128,7 @@ public class ServerChatService extends Service {
                     if (client == null || client.isClosed()) {
                         //若客户连接已关闭，就退出循环，不再接收当前客户的消息
                         ChatAppLog.debug("receiverMessageFromClient - client is close");
-                        closeClient();
+                        mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
                         break;
                     }
                     //这里会阻塞线程
@@ -136,7 +136,7 @@ public class ServerChatService extends Service {
                     if (receiverMessage == null || "".equals(receiverMessage) || "null".equals(receiverMessage)) {
                         ChatAppLog.debug("------receive : " + receiverMessage);
                         //读取到的消息为空，证明该客户已断开连接
-                        closeClient();
+                        mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
                         break;
                     }
                     Message message = new Message();
@@ -149,7 +149,7 @@ public class ServerChatService extends Service {
                 }
             } catch (Exception e) {
                 ChatAppLog.error(e.getMessage());
-                closeClient();
+                mHandler.sendEmptyMessage(Constant.MSG_SOCKET_CLOSE);
             }
         });
     }
@@ -165,6 +165,9 @@ public class ServerChatService extends Service {
      */
     public void sendMessageToClient(String message) {
         if (!"".equals(message)) {
+            if (client == null || client.isClosed()) {
+                return;
+            }
             threadPool.execute(() -> {
                 ChatAppLog.debug("sendTest---" + message);
                 serverOut.println(message);
@@ -178,20 +181,26 @@ public class ServerChatService extends Service {
      */
     public void closeClient() {
         try {
-            //加上判断，若socket已断开，就不再重复执行以下操作
-            if (client == null || client.isClosed()) {
-                return;
-            }
             if (serverIn != null) {
-                client.shutdownOutput();
-                client.shutdownInput();
+                //客户端socket 已经关闭的情况，服务器端socket 调用shutdownOutput/shutdownInput 则会出现这个错误
+                //java.io.IOException: shutdown failed: ENOTCONN (Transport endpoint is not connected)
+//                client.shutdownOutput();
+//                client.shutdownInput();
                 serverIn.close();
+                serverIn = null;
             }
             if (serverOut != null) {
                 serverOut.close();
+                serverOut = null;
+            }
+            //加上判断，若socket已断开，就不再重复执行以下操作
+            if (client == null || client.isClosed()) {
+                client = null;
+                return;
             }
             if (client != null) {
                 client.close();
+                client = null;
             }
         } catch (IOException e) {
             e.printStackTrace();

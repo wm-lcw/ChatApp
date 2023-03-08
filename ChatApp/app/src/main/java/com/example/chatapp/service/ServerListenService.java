@@ -106,7 +106,7 @@ public class ServerListenService extends Service {
         DeviceSearchResponser.open();
         threadPool.execute(() -> {
             try {
-//                while(true){
+                while(true){
                     isListing = true;
                     listenThread = Thread.currentThread();
                     ChatAppLog.debug("" + serverSocket);
@@ -118,7 +118,7 @@ public class ServerListenService extends Service {
                     Message msg = new Message();
                     msg.what = Constant.MSG_SOCKET_NEW_CLIENT;
                     mHandler.sendMessage(msg);
-//                }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

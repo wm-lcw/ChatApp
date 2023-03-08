@@ -89,8 +89,13 @@ public class ServerChatFragment extends BaseFragment {
         this.clientSocket = clientSocket;
         this.TCP_IP = clientSocket.getInetAddress().toString();
         try {
-            this.serverOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
-            this.serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            if (clientSocket != null && !clientSocket.isClosed()){
+                this.serverOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                this.serverIn = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            } else{
+                this.serverOut = null;
+                this.serverIn = null;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -275,9 +280,7 @@ public class ServerChatFragment extends BaseFragment {
             } else if (view == btBack) {
                 ChatAppLog.debug("back");
                 closeConnection();
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
-                }
+                backToFirstFragment();
             }
         }
     };
@@ -316,9 +319,7 @@ public class ServerChatFragment extends BaseFragment {
                 ChatAppLog.debug("connect fail");
                 Toast.makeText(mContext, "connect fail! check your IP and PORT!", Toast.LENGTH_SHORT).show();
                 //连接失败时返回上个界面
-                if (mActivity != null && mActivity instanceof BasicActivity) {
-                    ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
-                }
+                backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
                 ChatAppLog.debug("connect success");
                 isConnect = true;
@@ -364,8 +365,9 @@ public class ServerChatFragment extends BaseFragment {
             } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
                 Toast.makeText(mContext, "连接已断开，请重新连接！", Toast.LENGTH_SHORT).show();
-                //收到服务端中断的信息
+                //收到客户端断开的信息
                 closeConnection();
+                backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
                 Toast.makeText(mContext, "撤回消息！", Toast.LENGTH_SHORT).show();
                 int revertPosition = msg.getData().getInt("revertPosition");
@@ -459,7 +461,9 @@ public class ServerChatFragment extends BaseFragment {
      */
     private void closeConnection() {
         ChatAppLog.debug("");
-        serverChatService.closeClient();
+        if (serverChatService != null){
+            serverChatService.closeClient();
+        }
         isConnect = false;
     }
 
@@ -468,6 +472,21 @@ public class ServerChatFragment extends BaseFragment {
         super.onDestroy();
         if (connection != null) {
             connection = null;
+        }
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title backToFirstFragment
+     * @author wm
+     * @createTime 2023/3/7 16:27
+     * @description 返回主页的Fragment
+     */
+    private void backToFirstFragment() {
+        if (mActivity != null && mActivity instanceof BasicActivity) {
+            ((BasicActivity) mActivity).removeFragment(ServerChatFragment.this, ServerFirstFragment.newInstance());
         }
     }
 }
