@@ -20,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,7 +36,9 @@ import com.example.chatapp.utils.NetWorkUtils;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName: ServerFirstFragment
@@ -59,6 +60,10 @@ public class ServerFirstFragment extends BaseFragment {
     private List<SocketBean> socketBeanList = new ArrayList<>();
     private SocketAdapter socketAdapter;
     private ServerListenService serverListenService;
+    /**
+     * clientMap用于筛选重复连接的客户，使用IP作为key，Socket作为value
+     * */
+    private final Map<String, Socket> clientMap = new HashMap<>();
 
     private static ServerFirstFragment instance = new ServerFirstFragment();
 
@@ -135,7 +140,7 @@ public class ServerFirstFragment extends BaseFragment {
         clientList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(mContext, "选中客户为" + socketBeanList.get(position).getIp(), Toast.LENGTH_SHORT).show();
+                showToast("选中客户为" + socketBeanList.get(position).getIp());
                 if (mActivity != null && mActivity instanceof BasicActivity) {
                     Socket client = socketBeanList.get(position).getSocket();
                     ServerChatFragment serverChatFragment = new ServerChatFragment(client);
@@ -204,9 +209,16 @@ public class ServerFirstFragment extends BaseFragment {
             } else if (msg.what == Constant.MSG_SOCKET_NEW_CLIENT) {
                 Socket client = serverListenService.getNewClient();
                 ChatAppLog.debug("client " + client);
-                //有客户端连接，将客户socket保存到socketBeanList中
-                socketBeanList.add(new SocketBean(client, client.getInetAddress().toString()));
-                socketAdapter.notifyDataSetChanged();
+                String newClientIp = client.getInetAddress().toString();
+                //使用Map来筛选重复连接的客户
+                if (!clientMap.containsKey(newClientIp)) {
+                    //有客户端连接，将客户socket保存到clientMap和socketBeanList中
+                    clientMap.put(newClientIp, client);
+                    socketBeanList.add(new SocketBean(client, newClientIp));
+                    socketAdapter.notifyDataSetChanged();
+                    showToast("客户: " + newClientIp + "请求连接！");
+                }
+
             }
         }
     };

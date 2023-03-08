@@ -26,7 +26,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -317,7 +316,7 @@ public class ServerChatFragment extends BaseFragment {
         public void handleMessage(Message msg) {
             if (msg.what == Constant.MSG_SOCKET_CONNECT_FAIL) {
                 ChatAppLog.debug("connect fail");
-                Toast.makeText(mContext, "connect fail! check your IP and PORT!", Toast.LENGTH_SHORT).show();
+                showToast("connect fail! check your IP and PORT!");
                 //连接失败时返回上个界面
                 backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_CONNECT) {
@@ -353,7 +352,7 @@ public class ServerChatFragment extends BaseFragment {
                 if (checkResult != -1) {
                     //接收到的是撤回指令，对消息进行撤回操作
                     hideMessage(checkResult);
-                    Toast.makeText(mContext, "对方撤回了一条消息！", Toast.LENGTH_SHORT).show();
+                    showToast("对方撤回了一条消息！");
                 } else {
                     Msg msg1 = new Msg(receiverMessage, Msg.TYPE_RECEIVED);
                     msgList.add(msg1);
@@ -364,19 +363,19 @@ public class ServerChatFragment extends BaseFragment {
                 msgRecyclerView.scrollToPosition(msgList.size() - 1);
             } else if (msg.what == Constant.MSG_SOCKET_CLOSE) {
                 ChatAppLog.debug("disconnect!!!");
-                Toast.makeText(mContext, "连接已断开，请重新连接！", Toast.LENGTH_SHORT).show();
+                showToast("连接已断开，请重新连接！");
                 //收到客户端断开的信息
                 closeConnection();
                 backToFirstFragment();
             } else if (msg.what == Constant.MSG_SOCKET_REVERT_MESSAGE) {
-                Toast.makeText(mContext, "撤回消息！", Toast.LENGTH_SHORT).show();
+                showToast("撤回消息！");
                 int revertPosition = msg.getData().getInt("revertPosition");
                 //在本机上隐藏撤回的消息
                 hideMessage(revertPosition);
                 //发送指令给对方，让对方隐藏该信息(信息由指令和撤回消息的下标组成)
                 serverChatService.sendMessageToClient(Constant.MSG__REVERT_MESSAGE_ACTION + ":" + revertPosition);
             } else if (msg.what == Constant.MSG_SOCKET_DELETE_MESSAGE) {
-                Toast.makeText(mContext, "删除消息！", Toast.LENGTH_SHORT).show();
+                showToast("删除消息！");
                 int deletePosition = msg.getData().getInt("deletePosition");
                 hideMessage(deletePosition);
             } else if (msg.what == Constant.MSG_SOCKET_COPY_MESSAGE) {
