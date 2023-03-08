@@ -1,5 +1,6 @@
 package com.example.chatapp.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -20,7 +21,9 @@ import com.example.chatapp.utils.ChatAppLog;
 import com.example.chatapp.utils.DeviceSearcher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName: ClientFirstFragment
@@ -40,13 +43,17 @@ public class ClientFirstFragment extends BaseFragment {
     private List<Device> deviceList = new ArrayList<>();
     private DeviceAdapter deviceAdapter;
     private ListView lvServiceList;
+    /**
+     * deviceMap用于筛选重复搜索到的服务，使用服务端设备UUID作为key，Device作为value
+     */
+    private Map<String, Device> deviceMap = new HashMap<>();
 
-    private static ClientFirstFragment instance = new ClientFirstFragment();
+    @SuppressLint("StaticFieldLeak")
+    private static final ClientFirstFragment INSTANCE = new ClientFirstFragment();
 
     public static ClientFirstFragment newInstance() {
-
-        ChatAppLog.debug("" + instance);
-        return instance;
+        ChatAppLog.debug("" + INSTANCE);
+        return INSTANCE;
     }
 
     private ClientFirstFragment() {
@@ -107,7 +114,7 @@ public class ClientFirstFragment extends BaseFragment {
     private void initAdapter() {
 //        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
 //        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
-        deviceList.add(new Device("192.168.125.65", 3333, "uuid"));
+//        deviceList.add(new Device("192.168.125.65", 3333, "uuid"));
         deviceAdapter = new DeviceAdapter(mContext, deviceList);
         lvServiceList.setAdapter(deviceAdapter);
         lvServiceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -134,9 +141,14 @@ public class ClientFirstFragment extends BaseFragment {
 
         @Override
         public void onSearchedNewOne(Device device) {
-            ChatAppLog.debug("find device " + device.getIp());
-            deviceList.add(device);
-            deviceAdapter.notifyDataSetChanged();
+            String deviceUuid = device.getUuid();
+            ChatAppLog.debug("find device IP:" + device.getIp() + "; UUID : " + deviceUuid);
+            //使用Map来筛选重复搜索出来的同一服务设备
+            if (!deviceMap.containsKey(deviceUuid)) {
+                deviceMap.put(deviceUuid, device);
+                deviceList.add(device);
+                deviceAdapter.notifyDataSetChanged();
+            }
         }
 
         @Override

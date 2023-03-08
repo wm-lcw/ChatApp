@@ -79,7 +79,16 @@ public class BaseFragment extends Fragment {
     public void initViewData(View view) {
     }
 
-    public void showToast(String content){
-        Toast.makeText(getActivity(),content,Toast.LENGTH_SHORT).show();
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title showToast
+     * @author wm
+     * @createTime 2023/3/8 13:54
+     * @description 显示Toast的方法
+     */
+    public void showToast(String content) {
+        Toast.makeText(getActivity(), content, Toast.LENGTH_SHORT).show();
     }
 }
