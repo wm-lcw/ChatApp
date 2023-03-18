@@ -144,7 +144,7 @@ public class ServerFirstFragment extends BaseFragment {
         clientList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (socketBeanList.get(position).isSocketEnable()){
+                if (socketBeanList.get(position).isSocketEnable()) {
                     showToast("选中客户为" + socketBeanList.get(position).getIp());
                     if (mActivity != null && mActivity instanceof BasicActivity) {
                         ServerChatFragment serverChatFragment = new ServerChatFragment(socketBeanList.get(position).getSocket());
@@ -227,6 +227,16 @@ public class ServerFirstFragment extends BaseFragment {
                     socketBeanList.add(new SocketBean(client, newClientIp, !client.isClosed()));
                     socketAdapter.notifyDataSetChanged();
                     showToast("客户: " + newClientIp + "请求连接！");
+                } else {
+                    //若该用户已存在，重新连接时提示为上线状态
+                    clientMap.put(newClientIp, client);
+                    int i = findClientPosition(newClientIp);
+                    if (i >= 0 && i < socketBeanList.size()) {
+                        socketBeanList.remove(i);
+                        socketBeanList.add(new SocketBean(client, newClientIp, !client.isClosed()));
+                        socketAdapter.notifyDataSetChanged();
+                        showToast("客户: " + newClientIp + "已上线！");
+                    }
                 }
             }
         }
@@ -256,6 +266,26 @@ public class ServerFirstFragment extends BaseFragment {
             socketBeanList.get(currentPosition).setSocketEnable(enable);
             socketAdapter.notifyDataSetChanged();
         }
+    }
+
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title findClientPosition
+     * @author wm
+     * @createTime 2023/3/18 14:08
+     * @description 查找客户列表中是否已存在该客户，已存在则返回下标
+     */
+    private int findClientPosition(String ip) {
+        SocketBean socketBean;
+        for (int i = 0; i < socketBeanList.size(); i++) {
+            socketBean = socketBeanList.get(i);
+            if (socketBean.getIp().equals(ip)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }
