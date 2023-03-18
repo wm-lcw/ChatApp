@@ -83,13 +83,13 @@ public class ServerListenService extends Service {
     }
 
     /**
-     *  @version V1.0
-     *  @Title startListen
-     *  @author wm
-     *  @createTime 2023/3/4 16:57
-     *  @description 开启监听
-     *  @param
-     *  @return
+     * @param
+     * @return
+     * @version V1.0
+     * @Title startListen
+     * @author wm
+     * @createTime 2023/3/4 16:57
+     * @description 开启监听
      */
     public void startListen(int port) {
         ChatAppLog.debug("start listing");
@@ -97,21 +97,40 @@ public class ServerListenService extends Service {
             ChatAppLog.debug("Server is listing...");
             return;
         }
+        isListing = true;
         try {
-            serverSocket = new ServerSocket(port);
+            if (serverSocket == null){
+                ChatAppLog.debug(" create new serverSocket");
+                //首次开启监听时才需要创建ServerSocket跟开启监听线程
+                serverSocket = new ServerSocket(port);
+                createServerSocket();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
         //开启设备查找反馈
         DeviceSearchResponser.open();
+    }
+
+    /**
+     *  @version V1.0
+     *  @Title createServerSocket
+     *  @author wm
+     *  @createTime 2023/3/18 15:50
+     *  @description 开启监听线程，该线程只会创建一次，且一直在运行
+     *  @param
+     *  @return 
+     */
+    private void createServerSocket(){
         threadPool.execute(() -> {
             try {
-                while(true){
+                while (true) {
                     isListing = true;
                     listenThread = Thread.currentThread();
                     ChatAppLog.debug("" + serverSocket);
-                    ChatAppLog.debug("" + listenThread);
-                    tpe = (ThreadPoolExecutor) threadPool;
+//                    ChatAppLog.debug("" + listenThread);
+//                    tpe = (ThreadPoolExecutor) threadPool;
+//                    ChatAppLog.debug("threadPool count " + tpe.getActiveCount());
                     //这里会阻塞，直到有客户的连接
                     client = serverSocket.accept();
                     ChatAppLog.debug("" + client);
@@ -120,65 +139,63 @@ public class ServerListenService extends Service {
                     mHandler.sendMessage(msg);
                 }
             } catch (Exception e) {
+                ChatAppLog.error(e.getMessage());
                 e.printStackTrace();
             }
         });
     }
 
     /**
-     *  @version V1.0
-     *  @Title getNewClient
-     *  @author wm
-     *  @createTime 2023/3/4 19:16
-     *  @description 获取最新的客户Socket
-     *  @param
-     *  @return 
+     * @param
+     * @return
+     * @version V1.0
+     * @Title getNewClient
+     * @author wm
+     * @createTime 2023/3/4 19:16
+     * @description 获取最新的客户Socket
      */
-    public Socket getNewClient(){
+    public Socket getNewClient() {
         return client;
     }
 
     /**
-     *  @version V1.0
-     *  @Title stopListen
-     *  @author wm
-     *  @createTime 2023/3/4 16:56
-     *  @description 停止监听
-     *  @param
-     *  @return 
+     * @param
+     * @return
+     * @version V1.0
+     * @Title stopListen
+     * @author wm
+     * @createTime 2023/3/4 16:56
+     * @description 停止监听
      */
     public void stopListen() {
         ChatAppLog.debug();
-        if (listenThread == null) {
-            return;
-        }
-        //关闭设备查找反馈
+        isListing = false;
+        //停止监听时只关闭设备查找反馈，监听线程仍在执行（避免多次开启造成多个线程在运行且无法正确中断，浪费资源）
         DeviceSearchResponser.close();
-        if (!listenThread.isInterrupted()) {
-            listenThread.interrupt();
-        }
     }
 
     /**
-     *  @version V1.0
-     *  @Title closeSocket
-     *  @author wm
-     *  @createTime 2023/3/4 16:56
-     *  @description 关闭Socket
-     *  @param
-     *  @return
+     * @param
+     * @return
+     * @version V1.0
+     * @Title closeSocket
+     * @author wm
+     * @createTime 2023/3/4 16:56
+     * @description 关闭Socket
      */
-    public void closeSocket(){
+    public void closeSocket() {
         try {
-            if (listenThread == null) {
+            if (serverSocket == null) {
                 return;
             }
-            if (!listenThread.isInterrupted()) {
-                listenThread.interrupt();
+            if (client != null){
                 client.close();
-                serverSocket.close();
-                serverSocket = null;
+                client = null;
             }
+            serverSocket.close();
+            serverSocket = null;
+            //关闭线程池
+            threadPool.shutdown();
         } catch (IOException e) {
             e.printStackTrace();
         }
