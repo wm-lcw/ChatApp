@@ -4,14 +4,17 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+
 import com.example.chatapp.R;
 import com.example.chatapp.adapter.DeviceAdapter;
 import com.example.chatapp.base.BaseFragment;
@@ -113,7 +116,7 @@ public class ClientFirstFragment extends BaseFragment {
      */
     private void initAdapter() {
 //        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
-//        deviceList.add(new Device("192.168.x.x", 3333, "uuid"));
+//        deviceList.add(new Device("192.88.1.66", 3333, "uuid"));
 //        deviceList.add(new Device("192.168.125.65", 3333, "uuid"));
         deviceAdapter = new DeviceAdapter(mContext, deviceList);
         lvServiceList.setAdapter(deviceAdapter);
@@ -137,18 +140,26 @@ public class ClientFirstFragment extends BaseFragment {
         @Override
         public void onSearchStart() {
             ChatAppLog.debug("start search");
+            //清空列表
+            deviceMap.clear();
+            deviceList.clear();
+            deviceAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onSearchedNewOne(Device device) {
             String deviceUuid = device.getUuid();
             ChatAppLog.debug("find device IP:" + device.getIp() + "; UUID : " + deviceUuid);
-            //使用Map来筛选重复搜索出来的同一服务设备
-            if (!deviceMap.containsKey(deviceUuid)) {
-                deviceMap.put(deviceUuid, device);
-                deviceList.add(device);
-                deviceAdapter.notifyDataSetChanged();
+            //使用Map来筛选重复搜索出来的同一服务设备，这里是根据UUID来判断是否是同一个用户，可能是同一个用户使用不同的IP，所以要保留最新的IP
+            if (deviceMap.containsKey(deviceUuid)) {
+                int i = findDevicePosition(deviceUuid);
+                if (i >= 0 && i < deviceList.size()) {
+                    deviceList.remove(i);
+                }
             }
+            deviceMap.put(deviceUuid, device);
+            deviceList.add(device);
+            deviceAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -157,4 +168,23 @@ public class ClientFirstFragment extends BaseFragment {
         }
     }
 
+    /**
+     * @param
+     * @return
+     * @version V1.0
+     * @Title findDevicePosition
+     * @author wm
+     * @createTime 2023/3/18 14:08
+     * @description 查找服务端列表中是否已存在该服务设备，已存在则返回下标
+     */
+    private int findDevicePosition(String uuid) {
+        Device device;
+        for (int i = 0; i < deviceList.size(); i++) {
+            device = deviceList.get(i);
+            if (device.getUuid().equals(uuid)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

@@ -27,6 +27,10 @@ public class DeviceAdapter  extends BaseAdapter {
     private List<Device> deviceList = new ArrayList<>();
 
     public DeviceAdapter(Context mContext, List<Device> deviceList) {
+        //赋值前先清空原List
+        if (this.deviceList != null){
+            this.deviceList.clear();
+        }
         this.mContext = mContext;
         this.deviceList = deviceList;
     }

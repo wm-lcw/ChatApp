@@ -30,6 +30,9 @@ public class SocketAdapter extends BaseAdapter {
     private int onlineTextColor, offlineTextColor;
 
     public SocketAdapter(Context context, List<SocketBean> list){
+        if (socketBeanList != null){
+            socketBeanList.clear();
+        }
         mContext = context;
         socketBeanList = list;
     }
